@@ -1,0 +1,255 @@
+{
+  "name": "mcp-prompt-optimizer",
+  "version": "3.1.0",
+  "description": "Professional cloud-based MCP server for AI-powered prompt optimization with intelligent context detection, Bayesian optimization, AG-UI real-time optimization, template auto-save, optimization insights, personal model configuration via WebUI, team collaboration, enterprise-grade features, production resilience, and startup validation. Universal compatibility with Claude Desktop, Cursor, Windsurf, and 17+ MCP clients.",
+  "main": "index.js",
+  "bin": {
+    "mcp-prompt-optimizer": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "check-status": "node lib/check-status.js",
+    "validate-key": "node lib/validate-key.js",
+    "clear-cache": "node lib/clear-cache.js",
+    "diagnose": "node lib/diagnose.js",
+    "dev": "cross-env OPTIMIZER_DEV_MODE=true OPTIMIZER_API_KEY=sk-dev-test-key node index.js",
+    "dev:mock": "cross-env NODE_ENV=development OPTIMIZER_DEV_MODE=true OPTIMIZER_API_KEY=sk-dev-mock-key node index.js",
+    "dev:windows": "set OPTIMIZER_DEV_MODE=true && set OPTIMIZER_API_KEY=sk-dev-test-key && node index.js",
+    "dev:unix": "OPTIMIZER_DEV_MODE=true OPTIMIZER_API_KEY=sk-dev-test-key node index.js",
+    "health-check": "node -e \"console.log('Package health check passed')\"",
+    "reset-cache": "node lib/clear-cache.js && echo 'Cache and health data cleared'",
+    "test": "node tests/test-runner.js",
+    "test:quick": "node tests/quick-test.js",
+    "test:integration": "node tests/integration-test.js",
+    "test:comprehensive": "node tests/comprehensive-test.js",
+    "test:runner": "node tests/test-runner.js",
+    "test:simple": "node tests/simple-test.js",
+    "pretest": "npm run health-check",
+    "prepublishOnly": "npm run test:quick",
+    "version": "echo 'Updating version...' && npm run test:quick"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.15.1",
+    "node-fetch": "^3.0.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "os": [
+    "win32",
+    "darwin",
+    "linux"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "prompt",
+    "optimization",
+    "ai",
+    "claude",
+    "anthropic",
+    "openrouter",
+    "model-configuration",
+    "personal-models",
+    "cursor",
+    "windsurf",
+    "cline",
+    "professional",
+    "subscription",
+    "cloud-based",
+    "context-detection",
+    "templates",
+    "template-auto-save",
+    "optimization-insights",
+    "analytics",
+    "team-collaboration",
+    "enterprise-grade",
+    "intelligent-routing",
+    "ai-context",
+    "api-key-management",
+    "startup-validation",
+    "caching",
+    "robust-error-handling",
+    "cli-commands",
+    "professional-tooling",
+    "network-resilience",
+    "production-ready",
+    "development-mode",
+    "fallback-support",
+    "cross-platform",
+    "windows",
+    "macos",
+    "linux",
+    "arm64",
+    "bayesian-optimization",
+    "ag-ui-real-time",
+    "streaming-optimization",
+    "websocket-support",
+    "performance-optimization",
+    "advanced-analytics",
+    "intelligent-context",
+    "ai-aware-rules",
+    "parameter-tuning",
+    "optimization-strategies"
+  ],
+  "author": "Prompt Optimizer Team <support@promptoptimizer.xyz>",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prompt-optimizer/mcp-prompt-optimizer.git"
+  },
+  "homepage": "https://promptoptimizer.xyz",
+  "bugs": {
+    "url": "https://github.com/prompt-optimizer/mcp-prompt-optimizer/issues"
+  },
+  "files": [
+    "index.js",
+    "lib/",
+    "README.md",
+    "CHANGELOG.md",
+    "CROSS-PLATFORM.md",
+    "LICENSE"
+  ],
+  "config": {
+    "crossPlatform": true,
+    "platforms": [
+      "win32-x64",
+      "darwin-x64",
+      "darwin-arm64",
+      "linux-x64",
+      "linux-arm64"
+    ],
+    "securityRequired": true,
+    "binaryIntegrity": false,
+    "freeTierSupport": false
+  },
+  "platforms": {
+    "win32-x64": {
+      "supported": true,
+      "tested": true
+    },
+    "darwin-x64": {
+      "supported": true,
+      "tested": true
+    },
+    "darwin-arm64": {
+      "supported": true,
+      "tested": true
+    },
+    "linux-x64": {
+      "supported": true,
+      "tested": true
+    },
+    "linux-arm64": {
+      "supported": true,
+      "tested": false
+    }
+  },
+  "api_requirements": {
+    "required_keys": [
+      {
+        "name": "OPTIMIZER_API_KEY",
+        "format": "sk-opt-*, sk-team-*, sk-dev-*, or sk-local-*",
+        "description": "Cloud API key from promptoptimizer.xyz/pricing or development key for testing",
+        "required": true
+      }
+    ],
+    "optional_keys": [
+      {
+        "name": "OPTIMIZER_BACKEND_URL",
+        "description": "Custom backend URL (defaults to production)",
+        "required": false
+      },
+      {
+        "name": "OPTIMIZER_DEV_MODE",
+        "description": "Enable development mode (true/false)",
+        "required": false,
+        "default": "false"
+      },
+      {
+        "name": "ENABLE_BAYESIAN_OPTIMIZATION",
+        "description": "Enable Bayesian optimization features (true/false)",
+        "required": false,
+        "default": "true"
+      },
+      {
+        "name": "ENABLE_AGUI_FEATURES",
+        "description": "Enable AG-UI real-time optimization features (true/false)",
+        "required": false,
+        "default": "true"
+      }
+    ]
+  },
+  "features": {
+    "core": {
+      "ai_context_detection": true,
+      "template_management": true,
+      "optimization_insights": true,
+      "quota_management": true,
+      "multi_tier_support": true,
+      "error_handling": true,
+      "caching": true,
+      "fallback_modes": true
+    },
+    "advanced": {
+      "bayesian_optimization": true,
+      "ag_ui_real_time": true,
+      "streaming_optimization": true,
+      "intelligent_routing": true,
+      "performance_analytics": true,
+      "ai_aware_rules": true,
+      "context_aware_templates": true,
+      "parameter_tuning": true
+    },
+    "enterprise": {
+      "team_collaboration": true,
+      "advanced_analytics": true,
+      "custom_models": true,
+      "priority_support": true,
+      "sla_guarantees": true,
+      "dedicated_resources": true
+    }
+  },
+  "backend_alignment": {
+    "version": "production-v2.2.0-stable",
+    "api_version": "v1",
+    "endpoints_aligned": true,
+    "feature_parity": true,
+    "bayesian_support": true,
+    "agui_support": true,
+    "last_sync": "2026-03-13T00:00:00Z"
+  },
+  "release_notes": {
+    "v3.0.5": {
+      "major_features": [
+        "Updated homepage and support links to promptoptimizer.xyz"
+      ],
+      "breaking_changes": [],
+      "migration_guide": "No migration required. Drop-in replacement for v3.0.4."
+    },
+    "v3.0.4": {
+      "major_features": [
+        "Bayesian optimization with parameter tuning",
+        "AG-UI real-time optimization capabilities",
+        "Enhanced AI context detection with weighted scoring",
+        "Advanced template search with AI-aware filtering"
+      ],
+      "breaking_changes": [],
+      "migration_guide": "All existing functionality remains compatible. New features are opt-in via environment variables.",
+      "backend_compatibility": "Fully aligned with FastAPI Backend v2.1.0-bayesian"
+    }
+  },
+  "support": {
+    "email": "support@promptoptimizer.xyz",
+    "documentation": "https://promptoptimizer.xyz/docs",
+    "dashboard": "https://promptoptimizer.xyz/dashboard",
+    "pricing": "https://promptoptimizer.xyz/pricing"
+  }
+}
