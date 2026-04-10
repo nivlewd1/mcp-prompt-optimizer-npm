@@ -1,6 +1,7 @@
 # MCP Prompt Optimizer v3.0.3
 
-🚀 **Professional cloud-based MCP server** for AI-powered prompt optimization with intelligent context detection, template management, team collaboration, and enterprise-grade reliability. Starting at $2.99/month.
+🚀 **Professional cloud-based MCP server** for AI-powered prompt optimization with intelligent context detection, template management, team collaboration, and enterprise-grade reliability. Starting at $0/month.
+
 
 ## ✨ Key Features
 
@@ -315,7 +316,7 @@ Configure custom models in the WebUI and the MCP server uses them automatically.
 
 | Plan | Price | Optimizations/month | CE Credits | Team members |
 |---|---|---|---|---|
-| 🎯 Explorer | $0/mo | 20 | 5 | 1 |
+| 🎯 Explorer | $2.99/mo | 20 | 5 | 1 |
 | 🎨 Creator | $29/mo | 18,000 | 30 | 2 + 1 key |
 | 🚀 Innovator | $99/mo | 75,000 | Unlimited | 5 + 10 keys |
 
