@@ -5,7 +5,7 @@
  * Production-grade with Bayesian optimization, AG-UI real-time features, enhanced network resilience, 
  * development mode, and complete backend alignment
  * 
- * Version: 3.1.0 - CE tools: generate_agent_sop, generate_skill_package, transform_for_framework, get_ce_quota_status
+ * Version: 3.2.0 - add delete_template tool (15 tools total)
  */
 
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
