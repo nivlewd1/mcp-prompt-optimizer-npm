@@ -36,6 +36,9 @@ const ENDPOINTS = {
 
     /** Update (PATCH) */
     UPDATE:            (id) => `${MCP_PREFIX}/templates/${id}`,
+
+    /** Delete (DELETE) */
+    DELETE:            (id) => `${MCP_PREFIX}/templates/${id}`,
   },
 
   /** Search templates (GET) — MCP endpoint, API-key auth */
@@ -184,6 +187,17 @@ class MCPPromptOptimizer {
               ai_context_detected: { type: "string", description: "New detected AI context" },
               is_public: { type: "boolean", description: "Whether the template is public" },
               tags: { type: "array", items: { type: "string" }, description: "New tags for the template" }
+            },
+            required: ["template_id"]
+          }
+        },
+        {
+          name: "delete_template",
+          description: "🗑️ Delete a saved optimization template by ID.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              template_id: { type: "string", description: "The ID of the template to delete" }
             },
             required: ["template_id"]
           }
@@ -364,6 +378,7 @@ class MCPPromptOptimizer {
           case "create_template": return await this.handleCreateTemplate(args);
           case "get_template": return await this.handleGetTemplate(args);
           case "update_template": return await this.handleUpdateTemplate(args);
+          case "delete_template": return await this.handleDeleteTemplate(args);
           case "get_optimization_insights": return await this.handleGetOptimizationInsights(args);
           case "get_real_time_status": return await this.handleGetRealTimeStatus();
           case "generate_agent_sop": return await this.handleGenerateAgentSop(args);
@@ -970,6 +985,17 @@ class MCPPromptOptimizer {
     }
   }
 
+  async handleDeleteTemplate(args) {
+    if (!args.template_id) throw new Error('Template ID is required');
+    try {
+      const result = await this.callBackendAPI(ENDPOINTS.TEMPLATE.DELETE(args.template_id), null, 'DELETE');
+      const title = result.message || `Template ${args.template_id}`;
+      return { content: [{ type: "text", text: `# 🗑️ Template Deleted\n\n${title}` }] };
+    } catch (error) {
+      throw new Error(`Failed to delete template: ${error.message}`);
+    }
+  }
+
   async handleGenerateAgentSop(args) {
     if (!args.goal) throw new Error('goal is required');
     const payload = { goal: args.goal };
@@ -1259,10 +1285,10 @@ class MCPPromptOptimizer {
       const remaining = limit - used;
       if (remaining <= 0) {
         output += `\n❌ **Quota Exhausted** — You have no optimizations remaining this month.\n`;
-        output += `Upgrade at https://promptoptimizer-blog.vercel.app/pricing\n`;
+        output += `Upgrade at https://promptoptimizer.xyz/local-license\n`;
         output += `*(Quota resets at the start of your next billing cycle)*\n`;
       } else if (percentage >= 90) {
-        output += `\n⚠️ **Critical** — ${remaining} optimization${remaining === 1 ? '' : 's'} remaining. Upgrade at https://promptoptimizer-blog.vercel.app/pricing\n`;
+        output += `\n⚠️ **Critical** — ${remaining} optimization${remaining === 1 ? '' : 's'} remaining. Upgrade at https://promptoptimizer.xyz/local-license\n`;
       } else if (percentage >= 75) {
         output += `\n⚠️ **Warning** — Approaching your monthly limit.\n`;
       }
@@ -1289,7 +1315,7 @@ class MCPPromptOptimizer {
     output += `\n## 🔗 **Account Management**\n`;
     output += `- Dashboard: https://promptoptimizer-blog.vercel.app/dashboard\n`;
     output += `- Analytics: https://promptoptimizer-blog.vercel.app/analytics\n`;
-    output += `- Upgrade: https://promptoptimizer-blog.vercel.app/pricing\n`;
+    output += `- Upgrade: https://promptoptimizer.xyz/local-license\n`;
 
     return output;
   }
@@ -1447,7 +1473,7 @@ async function startValidatedMCPServer() {
   try {
     const apiKey = process.env.OPTIMIZER_API_KEY;
     if (!apiKey) {
-      console.error('❌ API key required. Get one at https://promptoptimizer-blog.vercel.app/pricing');
+      console.error('❌ API key required. Get one at https://promptoptimizer.xyz/local-license');
       process.exit(1);
     }
     
