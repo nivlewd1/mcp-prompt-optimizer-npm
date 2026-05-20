@@ -127,6 +127,25 @@ class MCPPromptOptimizer {
                 type: "boolean",
                 description: "Enable Bayesian optimization features for parameter tuning (if available)",
                 default: true
+              },
+              value_hierarchy: {
+                type: "array",
+                description: "Ordered list of values/constraints the optimizer must respect. NON_NEGOTIABLE entries force LLM-tier routing and inject hard constraints into the system prompt. Example: [{label:'NON_NEGOTIABLE',description:'Never suggest removing error handling'},{label:'HIGH',description:'Preserve technical terminology'}]",
+                items: {
+                  type: "object",
+                  properties: {
+                    label: {
+                      type: "string",
+                      enum: ["NON_NEGOTIABLE", "HIGH", "MEDIUM", "LOW"],
+                      description: "Priority level for this constraint"
+                    },
+                    description: {
+                      type: "string",
+                      description: "The value or constraint to enforce during optimization"
+                    }
+                  },
+                  required: ["label", "description"]
+                }
               }
             },
             required: ["prompt"]
@@ -688,6 +707,10 @@ class MCPPromptOptimizer {
         goals: args.goals || ['clarity'],
         ai_context: detectedContext,
       };
+
+      if (args.value_hierarchy && args.value_hierarchy.length > 0) {
+        optimizationPayload.value_hierarchy = args.value_hierarchy;
+      }
 
       const result = await this.callBackendAPI(ENDPOINTS.OPTIMIZE, optimizationPayload);
       
