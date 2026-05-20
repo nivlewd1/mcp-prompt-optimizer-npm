@@ -1,6 +1,6 @@
 {
   "name": "mcp-prompt-optimizer",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "Professional cloud-based MCP server for AI-powered prompt optimization with intelligent context detection, Bayesian optimization, AG-UI real-time optimization, template auto-save, optimization insights, personal model configuration via WebUI, team collaboration, enterprise-grade features, production resilience, and startup validation. Universal compatibility with Claude Desktop, Cursor, Windsurf, and 17+ MCP clients.",
   "main": "index.js",
   "bin": {
@@ -194,7 +194,7 @@
     "last_sync": "2026-05-19T00:00:00Z"
   },
   "release_notes": {
-    "v3.2.1": {
+    "v3.2.2": {
       "major_features": [
         "optimize_prompt now accepts value_hierarchy parameter for constraint-driven optimization",
         "NON_NEGOTIABLE entries force LLM-tier routing and inject hard constraints into system prompt",
