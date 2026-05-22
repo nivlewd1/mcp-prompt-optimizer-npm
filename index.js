@@ -146,6 +146,25 @@ class MCPPromptOptimizer {
                   },
                   required: ["label", "description"]
                 }
+              },
+              intent_frame: {
+                type: "object",
+                description: "Question Method intent framing — steers optimization toward a specific angle, excludes off-topic territory, and defines what success looks like. Any non-null field floors routing to HYBRID tier minimum.",
+                properties: {
+                  perspective: {
+                    type: "string",
+                    description: "The angle or thesis to optimize from (e.g. 'growth is a retention problem, not an acquisition problem'). Gives the optimizer a north-star direction."
+                  },
+                  out_of_scope: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Topics, approaches, or angles to explicitly exclude from optimization (e.g. ['pricing strategy', 'acquisition channels'])."
+                  },
+                  success_definition: {
+                    type: "string",
+                    description: "Narrative description of what a successful optimized output achieves (e.g. 'reader understands why churn drives flat revenue even with user growth')."
+                  }
+                }
               }
             },
             required: ["prompt"]
@@ -710,6 +729,13 @@ class MCPPromptOptimizer {
 
       if (args.value_hierarchy && args.value_hierarchy.length > 0) {
         optimizationPayload.value_hierarchy = args.value_hierarchy;
+      }
+
+      if (args.intent_frame && typeof args.intent_frame === 'object') {
+        const { perspective, out_of_scope, success_definition } = args.intent_frame;
+        if (perspective || (out_of_scope && out_of_scope.length > 0) || success_definition) {
+          optimizationPayload.intent_frame = args.intent_frame;
+        }
       }
 
       const result = await this.callBackendAPI(ENDPOINTS.OPTIMIZE, optimizationPayload);
