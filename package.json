@@ -1,6 +1,6 @@
 {
   "name": "mcp-prompt-optimizer",
-  "version": "3.2.2",
+  "version": "3.2.3",
   "description": "Professional cloud-based MCP server for AI-powered prompt optimization with intelligent context detection, Bayesian optimization, AG-UI real-time optimization, template auto-save, optimization insights, personal model configuration via WebUI, team collaboration, enterprise-grade features, production resilience, and startup validation. Universal compatibility with Claude Desktop, Cursor, Windsurf, and 17+ MCP clients.",
   "main": "index.js",
   "bin": {
@@ -191,9 +191,21 @@
     "feature_parity": true,
     "bayesian_support": true,
     "agui_support": true,
-    "last_sync": "2026-05-19T00:00:00Z"
+    "last_sync": "2026-05-22T00:00:00Z"
   },
   "release_notes": {
+    "v3.2.3": {
+      "major_features": [
+        "optimize_prompt now accepts intent_frame parameter for Question Method intent framing",
+        "intent_frame.perspective steers optimization toward a specific angle or thesis",
+        "intent_frame.out_of_scope excludes topics/approaches from optimization scope",
+        "intent_frame.success_definition defines what a successful output achieves",
+        "Any non-null intent_frame field floors routing to HYBRID tier minimum for higher-quality optimization",
+        "Fixed value_hierarchy passthrough — was sent by client but silently dropped by backend MCP router (now fixed end-to-end)"
+      ],
+      "breaking_changes": [],
+      "migration_guide": "No migration required. intent_frame is fully optional; existing calls are unaffected."
+    },
     "v3.2.2": {
       "major_features": [
         "optimize_prompt now accepts value_hierarchy parameter for constraint-driven optimization",
