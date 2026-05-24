@@ -392,9 +392,34 @@ class MCPPromptOptimizer {
                 description: "The workflow goal the harness is built for."
               },
               deploy_target: {
-                type: "string",
-                enum: ["claude_code", "claude_desktop", "cursor", "copilot", "windsurf", "cline", "zed", "replit", "openai_agents", "ollama"],
-                description: "Target deployment platform. Default: claude_code."
+                oneOf: [
+                  {
+                    type: "string",
+                    enum: [
+                      "claude_code", "claude_desktop", "cursor", "copilot",
+                      "windsurf", "cline", "zed", "replit", "openai_agents", "ollama",
+                      "amazon_q", "aider", "continue_dev", "crewai"
+                    ],
+                    description: "Single deploy target."
+                  },
+                  {
+                    type: "array",
+                    items: {
+                      type: "string",
+                      enum: [
+                        "claude_code", "claude_desktop", "cursor", "copilot",
+                        "windsurf", "cline", "zed", "replit", "openai_agents", "ollama",
+                        "amazon_q", "aider", "continue_dev", "crewai"
+                      ]
+                    },
+                    description: "Multiple deploy targets simultaneously (Creator+ required)."
+                  }
+                ],
+                description: (
+                  "Target deployment platform(s). Single string (Explorer+) or array (Creator+). "
+                  + "amazon_q, aider, continue_dev, crewai require Creator+. "
+                  + "Default: claude_code."
+                )
               },
               session_id: {
                 type: "string",
@@ -1175,11 +1200,20 @@ class MCPPromptOptimizer {
     if (!args.sop_content && !args.session_id) {
       return { content: [{ type: "text", text: "Error: provide either sop_content or session_id." }] };
     }
-    const deployTarget = args.deploy_target || "claude_code";
+    // Normalize deploy_target: string → [string], array → array, undefined → ["claude_code"]
+    let deployTargets;
+    if (!args.deploy_target) {
+      deployTargets = ["claude_code"];
+    } else if (Array.isArray(args.deploy_target)) {
+      deployTargets = args.deploy_target;
+    } else {
+      deployTargets = [args.deploy_target];
+    }
+
     const payload = {
       goal: args.goal,
-      deploy_target: deployTarget,
-      platform: deployTarget,
+      deploy_target: deployTargets.length === 1 ? deployTargets[0] : deployTargets,
+      platform: deployTargets[0],
       user_goal: args.goal,
       sop_content: args.sop_content || "",
     };
@@ -1201,7 +1235,7 @@ class MCPPromptOptimizer {
       return {
         content: [{
           type: "text",
-          text: `# Harness Bundle Requested\n\nDeploy target: **${deployTarget}**\nGoal: ${args.goal}\n\nDownload from the CE dashboard or via the /harness-bundle API endpoint.`
+          text: `# Harness Bundle Requested\n\nDeploy target: **${deployTargets.join(", ")}**\nGoal: ${args.goal}\n\nDownload from the CE dashboard or via the /harness-bundle API endpoint.`
         }]
       };
     } catch (error) {
