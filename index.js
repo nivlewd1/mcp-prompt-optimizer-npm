@@ -68,6 +68,12 @@ const ENDPOINTS = {
   },
 };
 
+const DEPLOY_TARGET_ENUM = [
+  "claude_code", "claude_desktop", "cursor", "copilot",
+  "windsurf", "cline", "zed", "replit", "openai_agents", "ollama",
+  "amazon_q", "aider", "continue_dev", "crewai"
+];
+
 class MCPPromptOptimizer {
   constructor() {
     this.server = new Server(
@@ -395,22 +401,15 @@ class MCPPromptOptimizer {
                 oneOf: [
                   {
                     type: "string",
-                    enum: [
-                      "claude_code", "claude_desktop", "cursor", "copilot",
-                      "windsurf", "cline", "zed", "replit", "openai_agents", "ollama",
-                      "amazon_q", "aider", "continue_dev", "crewai"
-                    ],
+                    enum: DEPLOY_TARGET_ENUM,
                     description: "Single deploy target."
                   },
                   {
                     type: "array",
+                    minItems: 1,
                     items: {
                       type: "string",
-                      enum: [
-                        "claude_code", "claude_desktop", "cursor", "copilot",
-                        "windsurf", "cline", "zed", "replit", "openai_agents", "ollama",
-                        "amazon_q", "aider", "continue_dev", "crewai"
-                      ]
+                      enum: DEPLOY_TARGET_ENUM
                     },
                     description: "Multiple deploy targets simultaneously (Creator+ required)."
                   }
@@ -1209,6 +1208,10 @@ class MCPPromptOptimizer {
     } else {
       deployTargets = [args.deploy_target];
     }
+    // Guard: empty array falls back to default
+    if (deployTargets.length === 0) {
+      deployTargets = ["claude_code"];
+    }
 
     const payload = {
       goal: args.goal,
@@ -1241,7 +1244,15 @@ class MCPPromptOptimizer {
     } catch (error) {
       const msg = error?.message || String(error);
       if (msg.includes("TIER_LIMIT_REACHED")) {
-        return { content: [{ type: "text", text: `Upgrade required: Deploy target requires Explorer tier. Upgrade at /pricing.` }] };
+        const CREATOR_ONLY = ["amazon_q", "aider", "continue_dev", "crewai"];
+        const needsCreator =
+          msg.includes("creator") ||
+          deployTargets.length > 1 ||
+          CREATOR_ONLY.some(t => deployTargets.includes(t));
+        const tierNeeded = needsCreator ? "Creator" : "Explorer";
+        return { content: [{ type: "text",
+          text: `Upgrade required: this deploy target requires ${tierNeeded} tier or higher. Upgrade at /pricing.`
+        }] };
       }
       throw error;
     }
