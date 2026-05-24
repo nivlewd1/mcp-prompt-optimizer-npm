@@ -64,6 +64,7 @@ const ENDPOINTS = {
     SESSION:                 (id) => `/api/v1/context-engineer/sessions/${id}`,
     TRANSFORM:               '/api/v1/context-engineer/transform',
     QUOTA:                   '/api/v1/context-engineer/quota',
+    HARNESS_BUNDLE:          '/api/v1/context-engineer/harness-bundle',
   },
 };
 
@@ -330,7 +331,17 @@ class MCPPromptOptimizer {
             properties: {
               goal: { type: "string", description: "What the agent should accomplish" },
               context: { type: "string", description: "Additional context (optional)" },
-              model_id: { type: "string", description: "Model to use (optional)" }
+              model_id: { type: "string", description: "Model to use (optional)" },
+              intent_frame: {
+                type: "object",
+                description: "Optional IntentFrame to sharpen SOP scope and success criteria.",
+                properties: {
+                  perspective: { type: "string", description: "The agent role or viewpoint (e.g. DevOps engineer)." },
+                  out_of_scope: { type: "string", description: "What is explicitly excluded from this workflow." },
+                  success_definition: { type: "string", description: "Measurable criteria that define success." }
+                },
+                additionalProperties: false
+              }
             },
             required: ["goal"]
           }
@@ -365,6 +376,37 @@ class MCPPromptOptimizer {
           name: "get_ce_quota_status",
           description: "Check your Context Engineer credit balance and available workflow types.",
           inputSchema: { type: "object", properties: {}, additionalProperties: false }
+        },
+        {
+          name: "generate_harness_bundle",
+          description: (
+            "Generate a deployment-ready Agentic Harness ZIP bundle for a specific platform. "
+            + "Returns a confirmation message when the bundle is queued. "
+            + "Explorer+ required for non-default deploy targets."
+          ),
+          inputSchema: {
+            type: "object",
+            properties: {
+              goal: {
+                type: "string",
+                description: "The workflow goal the harness is built for."
+              },
+              deploy_target: {
+                type: "string",
+                enum: ["claude_code", "claude_desktop", "cursor", "copilot", "windsurf", "cline", "zed", "replit", "openai_agents", "ollama"],
+                description: "Target deployment platform. Default: claude_code."
+              },
+              session_id: {
+                type: "string",
+                description: "Optional: session ID from a prior generate_skill_package call to reuse SOP."
+              },
+              sop_content: {
+                type: "string",
+                description: "The SOP content to base the harness on (required if no session_id)."
+              }
+            },
+            required: ["goal"]
+          }
         },
       ];
 
@@ -423,6 +465,7 @@ class MCPPromptOptimizer {
           case "generate_skill_package": return await this.handleGenerateSkillPackage(args);
           case "transform_for_framework": return await this.handleTransformForFramework(args);
           case "get_ce_quota_status": return await this.handleGetCEQuotaStatus();
+          case "generate_harness_bundle": return await this.handleGenerateHarnessBundle(args);
           default: throw new Error(`Unknown tool: ${name}`);
         }
       } catch (error) {
@@ -1050,6 +1093,7 @@ class MCPPromptOptimizer {
     const payload = { goal: args.goal };
     if (args.context) payload.context = args.context;
     if (args.model_id) payload.model_id = args.model_id;
+    if (args.intent_frame) payload.intent_frame = args.intent_frame;
     try {
       const result = await this.callBackendAPI(ENDPOINTS.CE.SOP, payload);
       const sopContent = result.sop || result.content || result.result || JSON.stringify(result, null, 2);
@@ -1124,6 +1168,47 @@ class MCPPromptOptimizer {
       return { content: [{ type: "text", text: lines.join('\n') }] };
     } catch (error) {
       throw new Error(`Failed to get CE quota: ${error.message}`);
+    }
+  }
+
+  async handleGenerateHarnessBundle(args) {
+    if (!args.sop_content && !args.session_id) {
+      return { content: [{ type: "text", text: "Error: provide either sop_content or session_id." }] };
+    }
+    const deployTarget = args.deploy_target || "claude_code";
+    const payload = {
+      goal: args.goal,
+      deploy_target: deployTarget,
+      platform: deployTarget,
+      user_goal: args.goal,
+      sop_content: args.sop_content || "",
+    };
+
+    // If session_id provided, first fetch session artifacts for sop_content
+    if (args.session_id) {
+      try {
+        const status = await this.callBackendAPI(ENDPOINTS.CE.SESSION(args.session_id), null, "GET");
+        const sop = status.artifacts?.sop_content || status.sop_content || "";
+        if (sop) payload.sop_content = sop;
+      } catch (_) {
+        // Proceed with empty sop_content; backend will handle gracefully
+      }
+    }
+
+    try {
+      await this.callBackendAPI(ENDPOINTS.CE.HARNESS_BUNDLE, payload);
+      return {
+        content: [{
+          type: "text",
+          text: `# Harness Bundle Requested\n\nDeploy target: **${deployTarget}**\nGoal: ${args.goal}\n\nDownload from the CE dashboard or via the /harness-bundle API endpoint.`
+        }]
+      };
+    } catch (error) {
+      const msg = error?.response?.data?.detail?.message || error?.message || String(error);
+      if (msg.includes("TIER_LIMIT_REACHED")) {
+        return { content: [{ type: "text", text: `Upgrade required: ${msg}` }] };
+      }
+      throw error;
     }
   }
 
