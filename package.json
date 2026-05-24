@@ -1,6 +1,6 @@
 {
   "name": "mcp-prompt-optimizer",
-  "version": "3.2.3",
+  "version": "3.3.0",
   "description": "Professional cloud-based MCP server for AI-powered prompt optimization with intelligent context detection, Bayesian optimization, AG-UI real-time optimization, template auto-save, optimization insights, personal model configuration via WebUI, team collaboration, enterprise-grade features, production resilience, and startup validation. Universal compatibility with Claude Desktop, Cursor, Windsurf, and 17+ MCP clients.",
   "main": "index.js",
   "bin": {
@@ -191,9 +191,20 @@
     "feature_parity": true,
     "bayesian_support": true,
     "agui_support": true,
-    "last_sync": "2026-05-22T00:00:00Z"
+    "last_sync": "2026-05-23T00:00:00Z"
   },
   "release_notes": {
+    "v3.3.0": {
+      "major_features": [
+        "New tool: generate_harness_bundle — generate a deployment-ready Agentic Harness ZIP for 9 platforms (claude_code, claude_desktop, cursor, copilot, windsurf, cline, zed, replit, openai_agents)",
+        "generate_agent_sop now accepts intent_frame parameter (perspective, out_of_scope, success_definition) to sharpen SOP scope and success criteria",
+        "Explorer+ tier gate enforced server-side for non-default deploy targets",
+        "callBackendAPI now handles binary (ZIP) responses gracefully — skips JSON parse for non-JSON content types",
+        "Improved TIER_LIMIT_REACHED error detection with proper error detail stringification"
+      ],
+      "breaking_changes": [],
+      "migration_guide": "No migration required. Both new features are additive and fully optional; existing calls are unaffected."
+    },
     "v3.2.3": {
       "major_features": [
         "optimize_prompt now accepts intent_frame parameter for Question Method intent framing",
