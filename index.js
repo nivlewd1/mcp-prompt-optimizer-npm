@@ -1190,7 +1190,8 @@ class MCPPromptOptimizer {
         const status = await this.callBackendAPI(ENDPOINTS.CE.SESSION(args.session_id), null, "GET");
         const sop = status.artifacts?.sop_content || status.sop_content || "";
         if (sop) payload.sop_content = sop;
-      } catch (_) {
+      } catch (sessionErr) {
+        console.error(`[handleGenerateHarnessBundle] Could not fetch session ${args.session_id}:`, sessionErr.message || sessionErr);
         // Proceed with empty sop_content; backend will handle gracefully
       }
     }
@@ -1204,9 +1205,9 @@ class MCPPromptOptimizer {
         }]
       };
     } catch (error) {
-      const msg = error?.response?.data?.detail?.message || error?.message || String(error);
+      const msg = error?.message || String(error);
       if (msg.includes("TIER_LIMIT_REACHED")) {
-        return { content: [{ type: "text", text: `Upgrade required: ${msg}` }] };
+        return { content: [{ type: "text", text: `Upgrade required: Deploy target requires Explorer tier. Upgrade at /pricing.` }] };
       }
       throw error;
     }
@@ -1257,13 +1258,25 @@ class MCPPromptOptimizer {
         res.on('end', () => {
           try {
             if (res.statusCode >= 200 && res.statusCode < 300) {
-              const parsed = JSON.parse(responseData);
-              resolve(parsed);
+              const contentType = res.headers['content-type'] || '';
+              if (contentType.includes('application/json') || contentType === '') {
+                try {
+                  const parsed = JSON.parse(responseData);
+                  resolve(parsed);
+                } catch (e) {
+                  reject(new Error(`Invalid response format: ${e.message}`));
+                }
+              } else {
+                // Binary or non-JSON response (e.g., application/zip) — return metadata
+                resolve({ _binary: true, contentType, size: responseData.length });
+              }
             } else {
               let errorMessage;
               try {
                 const error = JSON.parse(responseData);
-                errorMessage = error.detail || error.message || `HTTP ${res.statusCode}`;
+                errorMessage = (typeof error.detail === 'object' && error.detail !== null)
+                  ? JSON.stringify(error.detail)
+                  : (error.detail || error.message || `HTTP ${res.statusCode}`);
               } catch {
                 errorMessage = `HTTP ${res.statusCode}: ${responseData}`;
               }
