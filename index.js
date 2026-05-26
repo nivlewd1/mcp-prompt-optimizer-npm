@@ -65,6 +65,8 @@ const ENDPOINTS = {
     TRANSFORM:               '/api/v1/context-engineer/transform',
     QUOTA:                   '/api/v1/context-engineer/quota',
     HARNESS_BUNDLE:          '/api/v1/context-engineer/harness-bundle',
+    SOP_EXPLORE:             '/api/v1/context-engineer/sop-explore',
+    SOP_BLEND:               '/api/v1/context-engineer/sop-blend',
   },
 };
 
@@ -432,6 +434,37 @@ class MCPPromptOptimizer {
             required: ["goal"]
           }
         },
+        {
+          name: "explore_sop_approaches",
+          description: (
+            "Generate 3 parallel SOP variants (process-oriented, decision-tree, role-based) for comparison before committing. " +
+            "Returns exploration_html (self-contained comparison grid), variants array, and a recommended variant. " +
+            "Innovator tier required. " +
+            "Optionally provide blend_description to skip comparison and receive a single blended SOP instead."
+          ),
+          inputSchema: {
+            type: "object",
+            properties: {
+              goal: {
+                type: "string",
+                description: "The workflow goal to generate SOP variants for"
+              },
+              context: {
+                type: "string",
+                description: "Optional background context or documentation excerpt"
+              },
+              blend_description: {
+                type: "string",
+                description: "Optional: if provided, skips variant comparison and blends all 3 into one SOP using this description"
+              },
+              perspective: { type: "string", description: "Agent role or viewpoint (IntentFrame)" },
+              out_of_scope: { type: "string", description: "What is explicitly excluded (IntentFrame)" },
+              success_definition: { type: "string", description: "Measurable success criteria (IntentFrame)" },
+            },
+            required: ["goal"],
+            additionalProperties: false
+          }
+        },
       ];
 
       // Add advanced tools if Bayesian optimization is enabled
@@ -490,6 +523,7 @@ class MCPPromptOptimizer {
           case "transform_for_framework": return await this.handleTransformForFramework(args);
           case "get_ce_quota_status": return await this.handleGetCEQuotaStatus();
           case "generate_harness_bundle": return await this.handleGenerateHarnessBundle(args);
+          case "explore_sop_approaches": return await this.handleExploreSopApproaches(args);
           default: throw new Error(`Unknown tool: ${name}`);
         }
       } catch (error) {
@@ -1255,6 +1289,69 @@ class MCPPromptOptimizer {
         }] };
       }
       throw error;
+    }
+  }
+
+  async handleExploreSopApproaches(args) {
+    if (!args.goal) {
+      return { content: [{ type: "text", text: "Error: goal is required." }] };
+    }
+
+    // If blend_description provided, explore then blend in one call chain
+    if (args.blend_description) {
+      try {
+        const explorePayload = {
+          goal: args.goal,
+          context: args.context || undefined,
+          perspective: args.perspective || undefined,
+          out_of_scope: args.out_of_scope || undefined,
+          success_definition: args.success_definition || undefined,
+        };
+        const exploreResult = await this.callBackendAPI(ENDPOINTS.CE.SOP_EXPLORE, explorePayload);
+        const blendPayload = {
+          variants: exploreResult.variants,
+          blend_description: args.blend_description,
+          goal: args.goal,
+        };
+        const blendResult = await this.callBackendAPI(ENDPOINTS.CE.SOP_BLEND, blendPayload);
+        return {
+          content: [{
+            type: "text",
+            text: `# Blended SOP\n\n${blendResult.sop_content}`
+          }]
+        };
+      } catch (error) {
+        throw new Error(`Failed to blend SOP approaches: ${error.message}`);
+      }
+    }
+
+    // Standard exploration: return 3 variant summaries
+    try {
+      const payload = {
+        goal: args.goal,
+        context: args.context || undefined,
+        perspective: args.perspective || undefined,
+        out_of_scope: args.out_of_scope || undefined,
+        success_definition: args.success_definition || undefined,
+      };
+      const result = await this.callBackendAPI(ENDPOINTS.CE.SOP_EXPLORE, payload);
+
+      const variantSummaries = result.variants.map(v => {
+        const rec = v.id === result.recommended ? " *(Recommended)*" : "";
+        return `## Variant ${v.id} — ${v.approach.replace('_', '-')}${rec}\n\n${v.content.slice(0, 600)}${v.content.length > 600 ? '\n\n...(truncated)' : ''}`;
+      }).join('\n\n---\n\n');
+
+      return {
+        content: [{
+          type: "text",
+          text: `# SOP Exploration Results\n\n**Goal:** ${args.goal}\n**Recommended:** Variant ${result.recommended}\n\n---\n\n${variantSummaries}\n\n---\n\n*To select a variant, call generate_skill_package with the full content of your chosen variant as sop_content. To blend variants, re-call explore_sop_approaches with blend_description.*`
+        }]
+      };
+    } catch (error) {
+      if (error.message && error.message.includes('403')) {
+        return { content: [{ type: "text", text: "Error: SOP exploration requires Innovator tier. Upgrade at /pricing." }] };
+      }
+      throw new Error(`Failed to explore SOP approaches: ${error.message}`);
     }
   }
 

@@ -1,6 +1,12 @@
-# MCP Prompt Optimizer v3.0.3
+# MCP Prompt Optimizer v3.1.3
 
-🚀 **Professional cloud-based MCP server** for AI-powered prompt optimization with intelligent context detection, template management, team collaboration, and enterprise-grade reliability. Starting at $0/month.
+[![NPM Version](https://img.shields.io/npm/v/mcp-prompt-optimizer)](https://www.npmjs.com/package/mcp-prompt-optimizer)
+[![License](https://img.shields.io/badge/license-Commercial-blue.svg)](LICENSE)
+[![CI](https://github.com/prompt-optimizer/mcp-prompt-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/prompt-optimizer/mcp-prompt-optimizer/actions)
+[![Snyk Health](https://snyk.io/advisor/npm-package/mcp-prompt-optimizer/badge.svg)](https://snyk.io/advisor/npm-package/mcp-prompt-optimizer)
+
+ðŸš€ **Professional cloud-based MCP server** for AI-powered prompt optimization with intelligent context detection, template management, team collaboration, and enterprise-grade reliability. Starting at $0/month.
+
 
 
 ## ✨ Key Features
@@ -20,7 +26,7 @@
 
 **1. Get your API key (required):**
 
-- **🆓 Free Tier** (`sk-local-*`): 5 daily optimizations — [promptoptimizer-blog.vercel.app/pricing](https://promptoptimizer-blog.vercel.app/pricing)
+- **🆓 Free Tier** (`sk-local-*`): 5 daily optimizations — [promptoptimizer.xyz/pricing](https://promptoptimizer.xyz/pricing)
 - **⭐ Paid Tiers** (`sk-opt-*`, `sk-team-*`): Higher quotas, team features, advanced capabilities
 
 **2. Install:**
@@ -421,15 +427,21 @@ Windsurf, Cline, VS Code, Zed, Replit, JetBrains IDEs, and Neovim are all suppor
 
 ---
 
-## 📞 Support & Resources
+## 🛠️ Support & Resources
 
-- **Documentation:** https://promptoptimizer-blog.vercel.app/docs
-- **Dashboard & model config:** https://promptoptimizer-blog.vercel.app/dashboard
-- **Troubleshooting:** https://promptoptimizer-blog.vercel.app/docs/troubleshooting
-- **Community support:** GitHub Discussions
-- **Email support:** support@promptoptimizer.help (Creator/Innovator plans)
-- **Enterprise:** enterprise@promptoptimizer.help
+- 📖 **Documentation:** [promptoptimizer-blog.vercel.app/docs](https://promptoptimizer-blog.vercel.app/docs)
+- 📊 **Dashboard & model config:** [promptoptimizer-blog.vercel.app/dashboard](https://promptoptimizer-blog.vercel.app/dashboard)
+- 🚀 **Pricing & API Keys**: [promptoptimizer.xyz/local-license](https://promptoptimizer.xyz/local-license)
+- 🐛 **Issues:** [GitHub Issues](https://github.com/prompt-optimizer/mcp-prompt-optimizer/issues)
+- 📄 **License:** [Commercial License](LICENSE)
+- 🔒 **Security:** [Security Policy](SECURITY.md)
+- 🤝 **Contributing:** [Contributing Guide](CONTRIBUTING.md)
+- 📜 **Code of Conduct:** [Contributor Covenant](CODE_OF_CONDUCT.md)
+- 📝 **Changelog:** [Release History](CHANGELOG.md)
+- 📧 **Email support:** support@promptoptimizer.xyz
+
 
 ---
 
-*Get started with 5 free optimizations at [promptoptimizer-blog.vercel.app/pricing](https://promptoptimizer-blog.vercel.app/pricing)*
+*Get started with 5 free optimizations at [promptoptimizer.xyz/pricing](https://promptoptimizer.xyz/pricing)*
+at [promptoptimizer.xyz/pricing](https://promptoptimizer.xyz/pricing)*

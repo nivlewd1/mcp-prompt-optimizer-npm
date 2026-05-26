@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-05-26
+
+### Added
+- `explore_sop_approaches` tool: generates 3 parallel SOP variants (process-oriented, decision-tree, role-based) for comparison. Optionally accepts `blend_description` to blend variants directly into a single SOP. Innovator tier required.
+
+## [3.1.3] - 2026-04-13
+
+### Changed
+- 📦 **Version Bump**: Incremented version to 3.1.3 to ensure clean publishing and link alignment.
+- 🔗 **Link Alignment**: Unified API key signup links to https://promptoptimizer.xyz/local-license.
+
+## [3.1.2] - 2026-04-12
+
+### Added
+- 🛡️ **Security Policy**: Added `SECURITY.md` for coordinated vulnerability disclosure.
+- 🤝 **Community Guidelines**: Added `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` to foster open-source participation.
+- 🤖 **CI/CD Automation**: Integrated GitHub Actions (`ci.yml`) for automated build and test validation.
+- 🏷️ **Snyk Health Badges**: Added professional health and status badges to `README.md`.
+
+### Changed
+- 📝 **Metadata Optimization**: Standardized `package.json` keywords and license strings for better registry visibility.
+- 📂 **Package Distribution**: Updated included files list to include new community and security documentation.
+- 📄 **Documentation Refresh**: Centralized resource links in README for better developer experience.
+
+## [3.1.1] - 2026-04-10
+
+### Changed
+- 💰 **Pricing Alignment**: Updated README to reflect current subscription tiers and optimization quotas.
+- 📦 **Version Bump**: Incremented version to v3.1.1 to resolve npm publishing conflict with existing v3.1.0 on the registry.
+
 ## [3.0.1] - 2025-12-09
 
 ### Fixed
@@ -43,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ **Production-only**: Package now enforces backend connectivity
 
 ### Migration from v2.x
-- All users must have valid API keys from https://promptoptimizer-blog.vercel.app/pricing
+- All users must have valid API keys from https://promptoptimizer.xyz/pricing
 - `OPTIMIZER_DEV_MODE=true` no longer works (intentionally disabled)
 - Offline usage no longer supported (requires active backend connection)
 - Short-lived caching (1-2 hours) replaces long-term caching
