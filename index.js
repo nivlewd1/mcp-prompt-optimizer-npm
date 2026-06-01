@@ -711,7 +711,7 @@ class MCPPromptOptimizer {
     const baseResult = {
       ...rulesResult,
       rules_based: false,  // Show as normal optimized output in mock mode
-      tier: 'explorer',
+      tier: 'free',
       mock_mode: true,
       template_saved: true,
       template_id: 'test-template-123',
@@ -1278,14 +1278,8 @@ class MCPPromptOptimizer {
     } catch (error) {
       const msg = error?.message || String(error);
       if (msg.includes("TIER_LIMIT_REACHED")) {
-        const CREATOR_ONLY = ["amazon_q", "aider", "continue_dev", "crewai"];
-        const needsCreator =
-          msg.includes("creator") ||
-          deployTargets.length > 1 ||
-          CREATOR_ONLY.some(t => deployTargets.includes(t));
-        const tierNeeded = needsCreator ? "Creator" : "Explorer";
         return { content: [{ type: "text",
-          text: `Upgrade required: this deploy target requires ${tierNeeded} tier or higher. Upgrade at /pricing.`
+          text: `Upgrade required: this deploy target requires Pro tier or higher. Upgrade at /pricing.`
         }] };
       }
       throw error;
@@ -1555,7 +1549,7 @@ class MCPPromptOptimizer {
   }
 
   formatQuotaStatus(result) {
-    let output = `# 📊 Account Status\n\n**Plan:** ${result.tier || 'explorer'}\n`;
+    let output = `# 📊 Account Status\n\n**Plan:** ${result.tier || 'free'}\n`;
     
     const quota = result.quota || {};
     if (quota.unlimited) {
