@@ -1,6 +1,6 @@
 {
   "name": "mcp-prompt-optimizer",
-  "version": "3.4.0",
+  "version": "3.4.1",
   "description": "Professional cloud-based MCP server for AI-powered prompt optimization with intelligent context detection, Bayesian optimization, AG-UI real-time optimization, template auto-save, optimization insights, personal model configuration via WebUI, team collaboration, enterprise-grade features, production resilience, and startup validation. Universal compatibility with Claude Desktop, Cursor, Windsurf, and 17+ MCP clients.",
   "main": "index.js",
   "bin": {
@@ -191,9 +191,18 @@
     "feature_parity": true,
     "bayesian_support": true,
     "agui_support": true,
-    "last_sync": "2026-05-23T00:00:00Z"
+    "last_sync": "2026-06-01T00:00:00Z"
   },
   "release_notes": {
+    "v3.4.1": {
+      "major_features": [
+        "D6 pricing migration: tier names updated to free/pro/enterprise (was free_trial/explorer/creator/innovator)",
+        "Tier-limit error message simplified to 'Pro tier or higher' matching new backend tier model",
+        "Mock mode and account status display default to 'free' tier"
+      ],
+      "breaking_changes": [],
+      "migration_guide": "No migration required. Existing API keys and configurations remain valid."
+    },
     "v3.3.0": {
       "major_features": [
         "New tool: generate_harness_bundle — generate a deployment-ready Agentic Harness ZIP for 9 platforms (claude_code, claude_desktop, cursor, copilot, windsurf, cline, zed, replit, openai_agents)",
