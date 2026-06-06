@@ -1454,9 +1454,8 @@ class MCPPromptOptimizer {
     let output;
     if (result.rules_based) {
       if (result.fallback_mode) {
-        output = `# 🔧 Rules-Based Optimization Applied\n\n`;
-        output += `⚠️ *Backend unreachable — your prompt has been structured using local rule templates (no LLM). `;
-        output += `Re-run when the backend is available for full LLM optimization.*\n\n`;
+        output = `# 🔧 Prompt Optimized (Local Rules)\n\n`;
+        output += `*Optimized using local rule templates — LLM quality available once you connect your API key.*\n\n`;
       } else {
         output = `# 🔧 Rules-Based Optimization Applied\n\n`;
         output += `*API key not validated — optimized using local rule templates. `;
@@ -1542,9 +1541,21 @@ class MCPPromptOptimizer {
     }
     
     if (!result.fallback_mode) {
-      output += `\n🔗 **Quick Actions**\n- Dashboard: https://promptoptimizer-blog.vercel.app/dashboard\n- Analytics: https://promptoptimizer-blog.vercel.app/analytics\n`;
+      output += `\n🔗 **Quick Actions**\n- Dashboard: https://promptoptimizer.xyz/dashboard\n- Analytics: https://promptoptimizer.xyz/analytics\n`;
+    } else {
+      const confPct = Math.round((result.confidence_score || 0) * 100);
+      output += `\n---\n`;
+      output += `\n💡 **Unlock LLM Optimization — Free**\n\n`;
+      output += `Local rules reached **${confPct}% confidence**. LLM optimization typically achieves **70–95%** — `;
+      output += `more specific, context-aware, and effective for your actual intent.\n\n`;
+      output += `**Get started free** (no credit card):\n`;
+      output += `1. Sign up at https://promptoptimizer.xyz\n`;
+      output += `2. Generate your API key at https://promptoptimizer.xyz/dashboard\n`;
+      output += `3. Run in your terminal:\n\n`;
+      output += `\`\`\`\nnpx mcp-prompt-optimizer connect\n\`\`\`\n\n`;
+      output += `You get **7 LLM optimizations/month free**. Upgrade anytime for more.\n`;
     }
-    
+
     return output;
   }
 
@@ -1788,8 +1799,83 @@ async function startValidatedMCPServer() {
   }
 }
 
+async function runConnectWizard() {
+  const readline = require('readline');
+  const fs = require('fs');
+  const path = require('path');
+  const os = require('os');
+
+  const configPaths = {
+    win32:  path.join(os.homedir(), 'AppData', 'Roaming', 'Claude', 'claude_desktop_config.json'),
+    darwin: path.join(os.homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json'),
+    linux:  path.join(os.homedir(), '.config', 'Claude', 'claude_desktop_config.json'),
+  };
+  const configPath = configPaths[process.platform] || configPaths.linux;
+
+  console.log('\n🔌 Prompt Optimizer — Connect Wizard\n');
+
+  if (!fs.existsSync(configPath)) {
+    console.log('❌ Claude Desktop config not found at:');
+    console.log(`   ${configPath}`);
+    console.log('\nOpen Claude Desktop first to create the config file, then re-run this command.');
+    process.exit(1);
+  }
+
+  let config;
+  try {
+    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  } catch (e) {
+    console.log(`❌ Could not read config: ${e.message}`);
+    process.exit(1);
+  }
+  if (!config.mcpServers) config.mcpServers = {};
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  rl.question('Paste your API key (get one free at https://promptoptimizer.xyz/dashboard): ', (apiKey) => {
+    rl.close();
+    apiKey = (apiKey || '').trim();
+
+    if (!apiKey.startsWith('sk-')) {
+      console.log('\n❌ Invalid key — must start with "sk-". Get one at https://promptoptimizer.xyz/dashboard');
+      process.exit(1);
+    }
+
+    const serverName = 'mcp-prompt-optimizer';
+    if (config.mcpServers[serverName]) {
+      if (!config.mcpServers[serverName].env) config.mcpServers[serverName].env = {};
+      config.mcpServers[serverName].env.OPTIMIZER_API_KEY = apiKey;
+      console.log(`\n✅ Updated "${serverName}" entry with your API key.`);
+    } else {
+      config.mcpServers[serverName] = {
+        command: 'npx',
+        args: ['-y', 'mcp-prompt-optimizer'],
+        env: { OPTIMIZER_API_KEY: apiKey },
+      };
+      console.log(`\n✅ Added "${serverName}" to Claude Desktop config.`);
+    }
+
+    try {
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    } catch (e) {
+      console.log(`\n❌ Could not write config: ${e.message}`);
+      console.log('Try running as administrator, or edit the file manually.');
+      process.exit(1);
+    }
+
+    console.log(`   Config: ${configPath}`);
+    console.log('\n👉 Restart Claude Desktop to activate LLM optimization.');
+    console.log('   Free plan: 7 LLM optimizations/month.');
+    console.log('   Upgrade at https://promptoptimizer.xyz/pricing\n');
+  });
+}
+
 if (require.main === module) {
-  startValidatedMCPServer();
+  const args = process.argv.slice(2);
+  if (args[0] === 'connect') {
+    runConnectWizard();
+  } else {
+    startValidatedMCPServer();
+  }
 }
 
 module.exports = { MCPPromptOptimizer };
