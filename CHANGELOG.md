@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0] - 2026-06-11
+
+### Fixed
+- Free-tier API key validation now works end-to-end. Free accounts (subscription_status NULL) can create one `sk-opt-*` key and use it with the MCP server for 7 LLM optimizations/month. Previously blocked by a bug where the free-tier launch patched an unused service module while the live enforcement layer retained the old 0-key/5-quota/none-MCP config.
+
+### Added
+- `connect` wizard: `npx mcp-prompt-optimizer connect` interactively adds your API key to Claude Desktop config. Supports macOS, Windows, and Linux config paths. Creates the server entry if absent, updates the key if the entry exists.
+- Upsell block in local fallback output: when no API key is configured, the rules-based result includes a one-command signup path (`npx mcp-prompt-optimizer connect`).
+
+## [3.5.0] - 2026-06-02
+
+### Added
+- LLM upsell block added to local fallback output
+- `connect` subcommand (interactive Claude Desktop config wizard)
+
+## [3.4.1] - 2026-05-28
+
+### Changed
+- Tier names updated from Explorer/Creator/Innovator to Free/Pro/Enterprise (D6 pricing migration)
+
 ## [3.4.0] - 2026-05-26
 
 ### Added

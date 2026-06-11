@@ -1,11 +1,11 @@
-# MCP Prompt Optimizer v3.1.3
+# MCP Prompt Optimizer v3.6.0
 
 [![NPM Version](https://img.shields.io/npm/v/mcp-prompt-optimizer)](https://www.npmjs.com/package/mcp-prompt-optimizer)
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](LICENSE)
 [![CI](https://github.com/prompt-optimizer/mcp-prompt-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/prompt-optimizer/mcp-prompt-optimizer/actions)
 [![Snyk Health](https://snyk.io/advisor/npm-package/mcp-prompt-optimizer/badge.svg)](https://snyk.io/advisor/npm-package/mcp-prompt-optimizer)
 
-ðŸš€ **Professional cloud-based MCP server** for AI-powered prompt optimization with intelligent context detection, template management, team collaboration, and enterprise-grade reliability. Starting at $0/month.
+🚀 **Professional cloud-based MCP server** for AI-powered prompt optimization with intelligent context detection, template management, team collaboration, and enterprise-grade reliability. Starting at $0/month.
 
 
 
@@ -24,27 +24,34 @@
 
 ## 🚀 Quick Start
 
-**1. Get your API key (required):**
+**1. Get your API key:**
 
-- **🆓 Free Tier** (`sk-local-*`): 5 daily optimizations — [promptoptimizer.xyz/pricing](https://promptoptimizer.xyz/pricing)
-- **⭐ Paid Tiers** (`sk-opt-*`, `sk-team-*`): Higher quotas, team features, advanced capabilities
+- **🆓 Free Tier** (`sk-opt-*`): 7 LLM optimizations/month, 1 API key — no credit card required
+- **⭐ Pro** (`sk-opt-*`): 500 optimizations/month, full model config, Context Engineer
+- **🏢 Enterprise** (`sk-team-*`): Unlimited optimizations, team keys, shared quotas
+
+Sign up and generate your key at [promptoptimizer.xyz/dashboard](https://promptoptimizer.xyz/dashboard).
 
 **2. Install:**
 ```bash
 npm install -g mcp-prompt-optimizer
 ```
 
-**3. Configure your MCP client:**
+**3. Connect to Claude Desktop (one command):**
+```bash
+npx mcp-prompt-optimizer connect
+```
+This wizard reads your API key and writes the MCP server entry to Claude Desktop config automatically. Cross-platform (macOS, Windows, Linux).
 
-Add to `~/.claude/claude_desktop_config.json` (Claude Desktop):
+**Or configure manually** — add to `~/.claude/claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "prompt-optimizer": {
+    "mcp-prompt-optimizer": {
       "command": "npx",
-      "args": ["mcp-prompt-optimizer"],
+      "args": ["-y", "mcp-prompt-optimizer"],
       "env": {
-        "OPTIMIZER_API_KEY": "sk-local-your-key-here"
+        "OPTIMIZER_API_KEY": "sk-opt-your-key-here"
       }
     }
   }
@@ -246,7 +253,7 @@ Real-time optimization status and AG-UI capabilities. Requires the feature to be
 
 ## 🤖 Context Engineer (CE) Tools
 
-Requires a Creator or Innovator subscription. CE tools generate agentic scaffolding artifacts (SOPs, skill packages, framework code) directly in your IDE.
+Requires a Pro or Enterprise subscription. CE tools generate agentic scaffolding artifacts (SOPs, skill packages, framework code) directly in your IDE.
 
 ### `generate_agent_sop`
 Generate a structured SOP document for an AI agent from a goal description. Returns markdown SOP ready for use.
@@ -269,6 +276,29 @@ Generate a complete skill package (SOP + SKILL.md + reference + examples + helpe
 ```
 `format` is one of `knowledge_doc` (default) or `agent_spec`.
 
+### `generate_harness_bundle`
+Generate a deployment-ready Agentic Harness ZIP bundle for a specific platform. Returns a confirmation when the bundle is queued for download.
+```json
+{
+  "goal": "The workflow goal the harness is built for",
+  "deploy_target": "claude_code",
+  "sop_content": "The SOP markdown content (required if no session_id)",
+  "session_id": "Optional: session ID from a prior generate_skill_package call"
+}
+```
+`deploy_target` accepts a single string (Pro+) or an array of strings (Enterprise — multi-platform simultaneously). Supported targets include `claude_code`, `langchain`, `autogen`, `crewai`, `amazon_q`, `aider`, `continue_dev`, and more. `amazon_q`, `aider`, `continue_dev`, `crewai` require Enterprise.
+
+### `explore_sop_approaches`
+Generate 3 parallel SOP variants (process-oriented, decision-tree, role-based) for comparison before committing to one. Returns an HTML comparison grid, a `variants` array, and a recommended variant. Enterprise required.
+```json
+{
+  "goal": "The workflow goal to generate SOP variants for",
+  "context": "Optional background context",
+  "blend_description": "Optional: blend all 3 variants into one SOP using this description"
+}
+```
+IntentFrame fields (`perspective`, `out_of_scope`, `success_definition`) are also accepted to scope the generation.
+
 ### `transform_for_framework`
 Transform a SOP into native code for your agent framework: LangChain tool, AutoGen agent, or Claude Code skill.
 ```json
@@ -290,7 +320,7 @@ Check your Context Engineer credit balance and what workflows are available at y
 Configure custom models in the WebUI and the MCP server uses them automatically.
 
 **Step 1 — Configure in WebUI:**
-1. Visit [Dashboard](https://promptoptimizer-blog.vercel.app/dashboard)
+1. Visit [Dashboard](https://promptoptimizer.xyz/dashboard)
 2. Go to Settings → User Settings
 3. Add your OpenRouter API key (from [openrouter.ai](https://openrouter.ai))
 4. Select your preferred models for optimization and evaluation
@@ -313,35 +343,36 @@ Configure custom models in the WebUI and the MCP server uses them automatically.
 | Code / technical | `anthropic/claude-3-5-sonnet` | `anthropic/claude-3-haiku` |
 
 > **Two different API keys:**
-> - **Service key** (`sk-opt-*`) — your MCP Prompt Optimizer subscription
+> - **Service key** (`sk-opt-*` or `sk-team-*`) — your MCP Prompt Optimizer subscription
 > - **OpenRouter key** — your personal OpenRouter account for model usage costs
 
 ---
 
 ## 💰 Subscription Plans
 
-| Plan | Price | Optimizations/month | CE Credits | Team members |
+| Plan | Price | Optimizations/month | CE Credits | API Keys |
 |---|---|---|---|---|
-| 🎯 Explorer | $2.99/mo | 20 | 5 | 1 |
-| 🎨 Creator | $29/mo | 18,000 | 30 | 2 + 1 key |
-| 🚀 Innovator | $99/mo | 75,000 | Unlimited | 5 + 10 keys |
-
-🆓 **Free trial:** 5 optimizations with full feature access.
+| 🆓 Free | $0 | 7 LLM | — | 1 |
+| ⭐ Pro | $19/mo | 500 | 5 | 1 |
+| 🏢 Enterprise | Custom | Unlimited | 50 | 10 (shared) |
 
 All plans include AI context detection, template management, personal model configuration, and optimization insights.
+
+[Get started free →](https://promptoptimizer.xyz/dashboard)
 
 ---
 
 ## 🔧 CLI Commands
 
 ```bash
-mcp-prompt-optimizer check-status   # Check API key and quota status
-mcp-prompt-optimizer validate-key   # Validate API key with backend
-mcp-prompt-optimizer test           # Test backend integration
-mcp-prompt-optimizer diagnose       # Run comprehensive diagnostic
-mcp-prompt-optimizer clear-cache    # Clear validation cache
-mcp-prompt-optimizer help           # Show help and setup instructions
-mcp-prompt-optimizer version        # Show version information
+npx mcp-prompt-optimizer connect        # Interactive wizard: add API key to Claude Desktop config
+mcp-prompt-optimizer check-status       # Check API key and quota status
+mcp-prompt-optimizer validate-key       # Validate API key with backend
+mcp-prompt-optimizer test               # Test backend integration
+mcp-prompt-optimizer diagnose           # Run comprehensive diagnostic
+mcp-prompt-optimizer clear-cache        # Clear validation cache
+mcp-prompt-optimizer help               # Show help and setup instructions
+mcp-prompt-optimizer version            # Show version information
 ```
 
 ---
@@ -355,7 +386,7 @@ mcp-prompt-optimizer version        # Show version information
 - Role-based access control
 
 ### Individual API Keys (`sk-opt-*`)
-- Personal quotas and billing
+- Personal quotas and billing — available on Free and Pro tiers
 - Individual template libraries
 - Account self-management
 
@@ -377,9 +408,9 @@ mcp-prompt-optimizer version        # Show version information
 ```json
 {
   "mcpServers": {
-    "prompt-optimizer": {
+    "mcp-prompt-optimizer": {
       "command": "npx",
-      "args": ["mcp-prompt-optimizer"],
+      "args": ["-y", "mcp-prompt-optimizer"],
       "env": { "OPTIMIZER_API_KEY": "sk-opt-your-key-here" }
     }
   }
@@ -391,9 +422,9 @@ Add to `~/.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
-    "prompt-optimizer": {
+    "mcp-prompt-optimizer": {
       "command": "npx",
-      "args": ["mcp-prompt-optimizer"],
+      "args": ["-y", "mcp-prompt-optimizer"],
       "env": { "OPTIMIZER_API_KEY": "sk-opt-your-key-here" }
     }
   }
@@ -406,6 +437,29 @@ Windsurf, Cline, VS Code, Zed, Replit, JetBrains IDEs, and Neovim are all suppor
 ---
 
 ## 📦 Changelog
+
+### v3.6.0
+- **Free tier MCP access** — Free users can now create an API key (`sk-opt-*`) and use the MCP server for 7 LLM optimizations/month at no cost. Previously, key creation was blocked in the live service due to a bug introduced when the free-tier launch landed in an unused module. Keys with `subscription_status: NULL` (all free accounts) now validate correctly.
+- **`connect` wizard** — `npx mcp-prompt-optimizer connect` interactively writes your API key to Claude Desktop config on macOS, Windows, and Linux. Replaces manual JSON editing for new users.
+- **Upsell block** — Local rules fallback output now includes a concise upgrade prompt with a one-command onboarding path when no API key is configured.
+
+### v3.5.0
+- LLM upsell block added to local fallback output
+- `connect` subcommand added (interactive Claude Desktop config wizard)
+
+### v3.4.1
+- Tier names migrated from Explorer/Creator/Innovator to Free/Pro/Enterprise (D6 pricing)
+
+### v3.4.0
+- `explore_sop_approaches` tool: generates 3 parallel SOP variants (process-oriented, decision-tree, role-based) for comparison before committing. Optionally accepts `blend_description` to blend variants directly. Enterprise tier required.
+
+### v3.3.0
+- `generate_harness_bundle` tool: generates deployment-ready ZIP harness for 14+ platforms. Single deploy target (Pro+) or multi-platform array (Enterprise).
+- Intent frame fields (`perspective`, `out_of_scope`, `success_definition`) added to `generate_agent_sop` for scoped SOP generation.
+
+### v3.2.x
+- `transform_for_framework` tool: converts SOP to native LangChain tool, AutoGen agent, or Claude Code skill
+- CE harness HTML review layer with interactive DAG visualization
 
 ### v3.0.3
 - **Rules fallback output rewritten** — local optimization now produces user-facing prose prompts instead of raw XML scaffolding. The output is directly usable as a prompt without modification.
@@ -429,9 +483,9 @@ Windsurf, Cline, VS Code, Zed, Replit, JetBrains IDEs, and Neovim are all suppor
 
 ## 🛠️ Support & Resources
 
-- 📖 **Documentation:** [promptoptimizer-blog.vercel.app/docs](https://promptoptimizer-blog.vercel.app/docs)
-- 📊 **Dashboard & model config:** [promptoptimizer-blog.vercel.app/dashboard](https://promptoptimizer-blog.vercel.app/dashboard)
-- 🚀 **Pricing & API Keys**: [promptoptimizer.xyz/local-license](https://promptoptimizer.xyz/local-license)
+- 📖 **Documentation:** [promptoptimizer.xyz/docs](https://promptoptimizer.xyz/docs)
+- 📊 **Dashboard & model config:** [promptoptimizer.xyz/dashboard](https://promptoptimizer.xyz/dashboard)
+- 🚀 **Pricing & API Keys**: [promptoptimizer.xyz/pricing](https://promptoptimizer.xyz/pricing)
 - 🐛 **Issues:** [GitHub Issues](https://github.com/prompt-optimizer/mcp-prompt-optimizer/issues)
 - 📄 **License:** [Commercial License](LICENSE)
 - 🔒 **Security:** [Security Policy](SECURITY.md)
@@ -440,8 +494,6 @@ Windsurf, Cline, VS Code, Zed, Replit, JetBrains IDEs, and Neovim are all suppor
 - 📝 **Changelog:** [Release History](CHANGELOG.md)
 - 📧 **Email support:** support@promptoptimizer.xyz
 
-
 ---
 
-*Get started with 5 free optimizations at [promptoptimizer.xyz/pricing](https://promptoptimizer.xyz/pricing)*
-at [promptoptimizer.xyz/pricing](https://promptoptimizer.xyz/pricing)*
+*Start free at [promptoptimizer.xyz](https://promptoptimizer.xyz) — 7 LLM optimizations/month, no credit card required.*
