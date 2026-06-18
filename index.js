@@ -1539,14 +1539,19 @@ class MCPPromptOptimizer {
     }
     
     if (!result.fallback_mode) {
-      if (result.quota_used != null && result.quota_limit != null) {
-        const remaining = result.quota_limit - result.quota_used;
-        if (result.quota_used >= result.quota_limit) {
-          output += `\n📊 **Usage:** ${result.quota_used}/${result.quota_limit} — quota reached. **[Upgrade for unlimited →](https://promptoptimizer.xyz/pricing)**\n`;
-        } else if (remaining <= 2) {
-          output += `\n📊 **Usage:** ${result.quota_used}/${result.quota_limit} LLM optimizations (${remaining} left) — [Upgrade for unlimited](https://promptoptimizer.xyz/pricing)\n`;
+      if (result.quota_used != null) {
+        if (result.quota_limit == null) {
+          // Unlimited plan — show status only, no upsell
+          output += `\n📊 **Usage:** ${result.quota_used} optimizations — ✓ Unlimited plan\n`;
         } else {
-          output += `\n📊 **Usage:** ${result.quota_used}/${result.quota_limit} LLM optimizations this month — [Upgrade for unlimited](https://promptoptimizer.xyz/pricing)\n`;
+          const remaining = result.quota_limit - result.quota_used;
+          if (result.quota_used >= result.quota_limit) {
+            output += `\n📊 **Usage:** ${result.quota_used}/${result.quota_limit} — quota reached. **[Upgrade for more →](https://promptoptimizer.xyz/pricing)**\n`;
+          } else if (remaining <= 2) {
+            output += `\n📊 **Usage:** ${result.quota_used}/${result.quota_limit} LLM optimizations (${remaining} left) — [Upgrade for more](https://promptoptimizer.xyz/pricing)\n`;
+          } else {
+            output += `\n📊 **Usage:** ${result.quota_used}/${result.quota_limit} LLM optimizations this month — [Upgrade for more](https://promptoptimizer.xyz/pricing)\n`;
+          }
         }
       }
       output += `\n🔗 **Quick Actions**\n- Dashboard: https://promptoptimizer.xyz/dashboard\n- Analytics: https://promptoptimizer.xyz/analytics\n`;
