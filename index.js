@@ -1464,11 +1464,9 @@ class MCPPromptOptimizer {
       output += `**Template:** \`${result.template_used || 'general'}\`\n\n`;
       output += `**Optimized Prompt:**\n\`\`\`\n${result.optimized_prompt}\n\`\`\`\n\n`;
     } else if (result.fallback_mode) {
-      // Legacy path — should no longer be reached
-      output = `# ⚠️ Backend Unavailable — Prompt Not Optimized\n\n`;
-      output += `**Issue:** ${result.error_reason}\n`;
-      output += `The backend could not be reached. Your original prompt is returned below unmodified.\n\n`;
-      output += `**Original Prompt:**\n\`\`\`\n${result.optimized_prompt}\n\`\`\`\n\n`;
+      output = `# 🔧 Optimized (local rules — backend slow)\n\n`;
+      output += `*Backend unavailable this time — applied local rule templates. Try again for LLM optimization.*\n\n`;
+      output += `**Optimized Prompt:**\n\`\`\`\n${result.optimized_prompt}\n\`\`\`\n\n`;
     } else {
       output = `# 🎯 Optimized Prompt\n\n${result.optimized_prompt}\n\n`;
       if (result.confidence_score < 0.25) {
@@ -1481,7 +1479,7 @@ class MCPPromptOptimizer {
     } else {
       output += `**Confidence:** ${(result.confidence_score * 100).toFixed(1)}%\n`;
     }
-    output += `**AI Context:** ${context.detectedContext}\n`;
+    output += `**AI Context:** ${result.metadata?.context_detection?.ai_context || context.detectedContext}\n`;
     
     if (result.template_saved) {
       output += `\n📁 **Template Auto-Save**\n✅ Automatically saved as template (ID: \`${result.template_id}\`)\n*Confidence threshold: >70% required for auto-save*\n`;
@@ -1541,6 +1539,16 @@ class MCPPromptOptimizer {
     }
     
     if (!result.fallback_mode) {
+      if (result.quota_used != null && result.quota_limit != null) {
+        const remaining = result.quota_limit - result.quota_used;
+        if (result.quota_used >= result.quota_limit) {
+          output += `\n📊 **Usage:** ${result.quota_used}/${result.quota_limit} — quota reached. **[Upgrade for unlimited →](https://promptoptimizer.xyz/pricing)**\n`;
+        } else if (remaining <= 2) {
+          output += `\n📊 **Usage:** ${result.quota_used}/${result.quota_limit} LLM optimizations (${remaining} left) — [Upgrade for unlimited](https://promptoptimizer.xyz/pricing)\n`;
+        } else {
+          output += `\n📊 **Usage:** ${result.quota_used}/${result.quota_limit} LLM optimizations this month — [Upgrade for unlimited](https://promptoptimizer.xyz/pricing)\n`;
+        }
+      }
       output += `\n🔗 **Quick Actions**\n- Dashboard: https://promptoptimizer.xyz/dashboard\n- Analytics: https://promptoptimizer.xyz/analytics\n`;
     } else {
       const confPct = Math.round((result.confidence_score || 0) * 100);
@@ -1805,67 +1813,162 @@ async function runConnectWizard() {
   const path = require('path');
   const os = require('os');
 
-  const configPaths = {
-    win32:  path.join(os.homedir(), 'AppData', 'Roaming', 'Claude', 'claude_desktop_config.json'),
-    darwin: path.join(os.homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json'),
-    linux:  path.join(os.homedir(), '.config', 'Claude', 'claude_desktop_config.json'),
-  };
-  const configPath = configPaths[process.platform] || configPaths.linux;
+  // Known MCP client config locations keyed by [client, platform]
+  const CLIENT_CONFIGS = [
+    {
+      name: 'Claude Desktop',
+      paths: {
+        win32:  path.join(os.homedir(), 'AppData', 'Roaming', 'Claude', 'claude_desktop_config.json'),
+        darwin: path.join(os.homedir(), 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json'),
+        linux:  path.join(os.homedir(), '.config', 'Claude', 'claude_desktop_config.json'),
+      },
+      serverKey: 'mcp-prompt-optimizer',
+    },
+    {
+      name: 'Cursor',
+      paths: {
+        win32:  path.join(os.homedir(), '.cursor', 'mcp.json'),
+        darwin: path.join(os.homedir(), '.cursor', 'mcp.json'),
+        linux:  path.join(os.homedir(), '.cursor', 'mcp.json'),
+      },
+      serverKey: 'mcp-prompt-optimizer',
+    },
+    {
+      name: 'VS Code Cline / Roo',
+      paths: {
+        win32:  path.join(os.homedir(), 'AppData', 'Roaming', 'Code', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'),
+        darwin: path.join(os.homedir(), 'Library', 'Application Support', 'Code', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'),
+        linux:  path.join(os.homedir(), '.config', 'Code', 'User', 'globalStorage', 'saoudrizwan.claude-dev', 'settings', 'cline_mcp_settings.json'),
+      },
+      serverKey: 'mcp-prompt-optimizer',
+    },
+    {
+      name: 'Continue.dev',
+      paths: {
+        win32:  path.join(os.homedir(), '.continue', 'config.json'),
+        darwin: path.join(os.homedir(), '.continue', 'config.json'),
+        linux:  path.join(os.homedir(), '.continue', 'config.json'),
+      },
+      serverKey: 'mcp-prompt-optimizer',
+    },
+  ];
 
-  console.log('\n🔌 Prompt Optimizer — Connect Wizard\n');
-
-  if (!fs.existsSync(configPath)) {
-    console.log('❌ Claude Desktop config not found at:');
-    console.log(`   ${configPath}`);
-    console.log('\nOpen Claude Desktop first to create the config file, then re-run this command.');
-    process.exit(1);
-  }
-
-  let config;
-  try {
-    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  } catch (e) {
-    console.log(`❌ Could not read config: ${e.message}`);
-    process.exit(1);
-  }
-  if (!config.mcpServers) config.mcpServers = {};
-
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  rl.question('Paste your API key (get one free at https://promptoptimizer.xyz/dashboard): ', (apiKey) => {
-    rl.close();
-    apiKey = (apiKey || '').trim();
-
-    if (!apiKey.startsWith('sk-')) {
-      console.log('\n❌ Invalid key — must start with "sk-". Get one at https://promptoptimizer.xyz/dashboard');
-      process.exit(1);
+  function safeWriteConfig(filePath, newConfig) {
+    const backupPath = filePath + '.bak';
+    // Backup
+    if (fs.existsSync(filePath)) {
+      fs.copyFileSync(filePath, backupPath);
     }
+    try {
+      const serialized = JSON.stringify(newConfig, null, 2);
+      fs.writeFileSync(filePath, serialized, 'utf8');
+      // Verify round-trip
+      JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    } catch (e) {
+      // Restore backup on any failure
+      if (fs.existsSync(backupPath)) {
+        fs.copyFileSync(backupPath, filePath);
+      }
+      throw e;
+    }
+  }
 
-    const serverName = 'mcp-prompt-optimizer';
-    if (config.mcpServers[serverName]) {
-      if (!config.mcpServers[serverName].env) config.mcpServers[serverName].env = {};
-      config.mcpServers[serverName].env.OPTIMIZER_API_KEY = apiKey;
-      console.log(`\n✅ Updated "${serverName}" entry with your API key.`);
+  function patchConfig(config, serverKey, apiKey) {
+    if (!config.mcpServers) config.mcpServers = {};
+    if (config.mcpServers[serverKey]) {
+      if (!config.mcpServers[serverKey].env) config.mcpServers[serverKey].env = {};
+      config.mcpServers[serverKey].env.OPTIMIZER_API_KEY = apiKey;
     } else {
-      config.mcpServers[serverName] = {
+      config.mcpServers[serverKey] = {
         command: 'npx',
         args: ['-y', 'mcp-prompt-optimizer'],
         env: { OPTIMIZER_API_KEY: apiKey },
       };
-      console.log(`\n✅ Added "${serverName}" to Claude Desktop config.`);
     }
+    return config;
+  }
 
-    try {
-      fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
-    } catch (e) {
-      console.log(`\n❌ Could not write config: ${e.message}`);
-      console.log('Try running as administrator, or edit the file manually.');
+  console.log('\n🔌 Prompt Optimizer — Connect Wizard\n');
+
+  // Detect which clients are installed
+  const platform = process.platform;
+  const found = CLIENT_CONFIGS
+    .map(c => ({ ...c, configPath: c.paths[platform] || c.paths.linux }))
+    .filter(c => fs.existsSync(c.configPath));
+
+  if (found.length === 0) {
+    console.log('❌ No supported MCP client config found. Supported clients:');
+    CLIENT_CONFIGS.forEach(c => {
+      const p = c.paths[platform] || c.paths.linux;
+      console.log(`   ${c.name}: ${p}`);
+    });
+    console.log('\nOpen your MCP client first to create its config file, then re-run this command.');
+    process.exit(1);
+  }
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+  function askApiKey(cb) {
+    rl.question('Paste your API key (get one free at https://promptoptimizer.xyz/dashboard): ', (key) => {
+      cb((key || '').trim());
+    });
+  }
+
+  function askClient(clients, cb) {
+    console.log('Multiple MCP clients detected. Which one should be configured?');
+    clients.forEach((c, i) => console.log(`  ${i + 1}) ${c.name}`));
+    rl.question('Enter number (or press Enter for all): ', (ans) => {
+      const n = parseInt(ans, 10);
+      if (!ans.trim()) {
+        cb(clients);
+      } else if (n >= 1 && n <= clients.length) {
+        cb([clients[n - 1]]);
+      } else {
+        console.log('Invalid selection, configuring all.');
+        cb(clients);
+      }
+    });
+  }
+
+  function applyToClients(clients, apiKey) {
+    rl.close();
+    let ok = 0;
+    for (const client of clients) {
+      let config;
+      try {
+        config = JSON.parse(fs.readFileSync(client.configPath, 'utf8'));
+      } catch (e) {
+        console.log(`❌ Could not read ${client.name} config: ${e.message}`);
+        continue;
+      }
+      try {
+        const patched = patchConfig(config, client.serverKey, apiKey);
+        safeWriteConfig(client.configPath, patched);
+        console.log(`✅ ${client.name} — configured (${client.configPath})`);
+        ok++;
+      } catch (e) {
+        console.log(`❌ Could not write ${client.name} config: ${e.message}`);
+        console.log('   Try running as administrator, or edit the file manually.');
+      }
+    }
+    if (ok > 0) {
+      console.log('\n👉 Restart your MCP client(s) to activate LLM optimization.');
+      console.log('   Free plan: 7 LLM optimizations/month.');
+      console.log('   Upgrade at https://promptoptimizer.xyz/pricing\n');
+    }
+  }
+
+  askApiKey((apiKey) => {
+    if (!apiKey.startsWith('sk-')) {
+      rl.close();
+      console.log('\n❌ Invalid key — must start with "sk-". Get one at https://promptoptimizer.xyz/dashboard');
       process.exit(1);
     }
-
-    console.log(`   Config: ${configPath}`);
-    console.log('\n👉 Restart Claude Desktop to activate LLM optimization.');
-    console.log('   Free plan: 7 LLM optimizations/month.');
-    console.log('   Upgrade at https://promptoptimizer.xyz/pricing\n');
+    if (found.length === 1) {
+      applyToClients(found, apiKey);
+    } else {
+      askClient(found, (chosen) => applyToClients(chosen, apiKey));
+    }
   });
 }
 
