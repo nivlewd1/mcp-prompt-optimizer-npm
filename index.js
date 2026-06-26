@@ -1479,8 +1479,14 @@ class MCPPromptOptimizer {
     } else {
       output += `**Confidence:** ${(result.confidence_score * 100).toFixed(1)}%\n`;
     }
-    output += `**AI Context:** ${result.metadata?.context_detection?.ai_context || context.detectedContext}\n`;
-    
+    output += `**AI Context:** ${result.metadata?.context_detection?.ai_context || result.metadata?.ai_context || context.detectedContext}\n`;
+    if (result.metadata?.routing_score != null) {
+      output += `**Routing Score:** ${result.metadata.routing_score.toFixed(3)} (${result.metadata?.routing_tier || 'unknown'})\n`;
+    }
+    if (!result.rules_based && !result.fallback_mode && result.metadata?.model_used) {
+      output += `**Model:** ${result.metadata.model_used}\n`;
+    }
+
     if (result.template_saved) {
       output += `\n📁 **Template Auto-Save**\n✅ Automatically saved as template (ID: \`${result.template_id}\`)\n*Confidence threshold: >70% required for auto-save*\n`;
     }
