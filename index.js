@@ -1779,9 +1779,9 @@ class MCPPromptOptimizer {
 }
 
 async function startValidatedMCPServer() {
-  console.log(`🚀 MCP Prompt Optimizer - Professional Cloud Server v${packageJson.version}\n`);
-  console.log(`🧠 Bayesian Optimization: ${process.env.ENABLE_BAYESIAN_OPTIMIZATION === 'true' ? 'Enabled' : 'Disabled'}`);
-  console.log(`⚡ AG-UI Features: ${process.env.ENABLE_AGUI_FEATURES === 'true' ? 'Enabled' : 'Disabled'}\n`);
+  console.error(`🚀 MCP Prompt Optimizer - Professional Cloud Server v${packageJson.version}\n`);
+  console.error(`🧠 Bayesian Optimization: ${process.env.ENABLE_BAYESIAN_OPTIMIZATION === 'true' ? 'Enabled' : 'Disabled'}`);
+  console.error(`⚡ AG-UI Features: ${process.env.ENABLE_AGUI_FEATURES === 'true' ? 'Enabled' : 'Disabled'}\n`);
   
   try {
     const apiKey = process.env.OPTIMIZER_API_KEY;
@@ -1792,24 +1792,24 @@ async function startValidatedMCPServer() {
     
     // SECURITY: No development mode bypass - backend validation required
     const manager = new CloudApiKeyManager(apiKey);
-    console.log('🔧 Validating API key...\n');
+    console.error('🔧 Validating API key...\n');
     const validation = await manager.validateAndPrepare();
     
-    console.log('🔧 Starting MCP server...\n');
+    console.error('🔧 Starting MCP server...\n');
     const mcpServer = new MCPPromptOptimizer();
-    console.log('✅ MCP server ready for connections');
+    console.error('✅ MCP server ready for connections');
     
     // Enhanced status display
     const quotaDisplay = validation.quotaStatus.unlimited ? 
       'Unlimited' : 
       `${validation.quotaStatus.remaining}/${validation.quotaStatus.limit} remaining`;
     
-    console.log(`📊 Plan: ${validation.tier} | Quota: ${quotaDisplay}`);
+    console.error(`📊 Plan: ${validation.tier} | Quota: ${quotaDisplay}`);
     
-    if (validation.mode.mock) console.log('🎭 Running in mock mode');
-    if (validation.mode.development) console.log('⚙️ Development mode active');
-    if (validation.mode.fallback) console.log('🔄 Fallback mode active');
-    if (validation.mode.offline) console.log('📱 Offline mode active');
+    if (validation.mode.mock) console.error('🎭 Running in mock mode');
+    if (validation.mode.development) console.error('⚙️ Development mode active');
+    if (validation.mode.fallback) console.error('🔄 Fallback mode active');
+    if (validation.mode.offline) console.error('📱 Offline mode active');
     
     await mcpServer.run();
   } catch (error) {
