@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - run: npm run health-check
+    # Gate on the contract check: tests/*-test.js are excluded by .gitignore, so
+    # test:quick/integration/etc. are absent on a clean checkout and cannot gate CI.
+    # contract-check.js is tracked, hermetic (no network / no API key), and green.
+    - run: npm run test:contract
