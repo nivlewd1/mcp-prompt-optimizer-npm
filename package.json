@@ -24,6 +24,7 @@
     "test:comprehensive": "node tests/comprehensive-test.js",
     "test:runner": "node tests/test-runner.js",
     "test:simple": "node tests/simple-test.js",
+    "test:contract": "node tests/contract-check.js",
     "pretest": "npm run health-check",
     "prepublishOnly": "npm run test:quick",
     "version": "echo 'Updating version...' && npm run test:quick"

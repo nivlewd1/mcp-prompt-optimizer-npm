@@ -1,0 +1,18 @@
+{
+  "_contract": "Canonical successful /api/v1/optimize response. SHARED CONTRACT — keep in sync with the FastAPI backend: app/models/optimize.py::OptimizeResponse (original_prompt, optimized_prompt, confidence_score, status, metadata, coaching_feedback, can_automate_evaluation) PLUS the fields the endpoint injects at runtime that are NOT on the Pydantic model but the npm client reads: quota_used, quota_limit (top-level) and metadata.{ai_context, context_detection.ai_context, routing_score, routing_tier, model_used}. If the backend changes any of these, update this fixture and tests/contract-test.js in the same change.",
+  "original_prompt": "write a function to add two numbers",
+  "optimized_prompt": "You are a senior software engineer. Write a well-documented function that adds two numbers, including type hints and a concise docstring describing the parameters and return value.",
+  "confidence_score": 0.87,
+  "status": "optimized",
+  "metadata": {
+    "ai_context": "CODE_GENERATION",
+    "context_detection": { "ai_context": "CODE_GENERATION" },
+    "routing_score": 0.62,
+    "routing_tier": "HYBRID",
+    "model_used": "openai/gpt-5-mini"
+  },
+  "quota_used": 12,
+  "quota_limit": 100,
+  "can_automate_evaluation": true,
+  "coaching_feedback": null
+}
