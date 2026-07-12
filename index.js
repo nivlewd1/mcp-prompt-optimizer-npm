@@ -57,6 +57,18 @@ const ENDPOINTS = {
   /** AG‑UI status (GET) */
   AGUI_STATUS:         '/api/status',
 
+  /** Prompt delivery by slug */
+  GET_PROMPT_BY_SLUG:      (slug) => `/api/v1/prompts/${slug}`,
+  COMPILE_PROMPT:          (slug) => `/api/v1/prompts/${slug}/compiled`,
+
+  /** Template governance (versioning, publish) */
+  TEMPLATE_VERSIONS:       (id) => `/api/v1/templates/${id}/versions`,
+  ROLLBACK_TEMPLATE:       (id, n) => `/api/v1/templates/${id}/rollback/${n}`,
+  PUBLISH_TEMPLATE:        (id) => `/api/v1/templates/${id}/publish`,
+
+  /** Quick evaluation (stateless) */
+  QUICK_EVALUATE:          '/api/v1/evaluations/quick-evaluate',
+
   /** Context Engineer (CE) endpoints */
   CE: {
     SOP:                     '/api/v1/context-engineer/sop',
@@ -465,6 +477,79 @@ class MCPPromptOptimizer {
             additionalProperties: false
           }
         },
+        {
+          name: "get_prompt_by_slug",
+          description: "Fetch your latest published prompt template by slug for runtime use — decouple prompts from deploys.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              slug: { type: "string", description: "The URL-safe slug of the prompt template (e.g., product-writer-a3f9c21b)" }
+            },
+            required: ["slug"]
+          }
+        },
+        {
+          name: "compile_prompt",
+          description: "Compile a prompt template with variable interpolation for runtime delivery — returns the fully interpolated prompt string ready for use.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              slug: { type: "string", description: "The URL-safe slug of the prompt template" },
+              variables: {
+                type: "object",
+                description: "Variable values to interpolate (e.g. {\"user_name\": \"Alex\", \"plan\": \"Pro\"})",
+                additionalProperties: { type: "string" }
+              }
+            },
+            required: ["slug"]
+          }
+        },
+        {
+          name: "list_template_versions",
+          description: "List all version snapshots of a saved template — every update creates a snapshot you can inspect or restore.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              template_id: { type: "string", description: "The ID of the template" }
+            },
+            required: ["template_id"]
+          }
+        },
+        {
+          name: "rollback_template",
+          description: "Restore a template to a previous version snapshot — undo unwanted changes instantly.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              template_id: { type: "string", description: "The ID of the template" },
+              version_number: { type: "number", description: "The version number to roll back to (use list_template_versions to find available versions)" }
+            },
+            required: ["template_id", "version_number"]
+          }
+        },
+        {
+          name: "publish_template",
+          description: "Publish a template — makes it available for runtime delivery via get_prompt_by_slug.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              template_id: { type: "string", description: "The ID of the template to publish" }
+            },
+            required: ["template_id"]
+          }
+        },
+        {
+          name: "run_quick_evaluation",
+          description: "Run a stateless one-shot evaluation of an optimized prompt using LLM judges — get actionable quality scoring without creating a dataset.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              prompt: { type: "string", description: "The optimized prompt to evaluate" },
+              original_prompt: { type: "string", description: "The original prompt for comparison scoring" }
+            },
+            required: ["prompt", "original_prompt"]
+          }
+        },
       ];
 
       // Add advanced tools if Bayesian optimization is enabled
@@ -524,6 +609,12 @@ class MCPPromptOptimizer {
           case "get_ce_quota_status": return await this.handleGetCEQuotaStatus();
           case "generate_harness_bundle": return await this.handleGenerateHarnessBundle(args);
           case "explore_sop_approaches": return await this.handleExploreSopApproaches(args);
+          case "get_prompt_by_slug": return await this.handleGetPromptBySlug(args);
+          case "compile_prompt": return await this.handleCompilePrompt(args);
+          case "list_template_versions": return await this.handleListTemplateVersions(args);
+          case "rollback_template": return await this.handleRollbackTemplate(args);
+          case "publish_template": return await this.handlePublishTemplate(args);
+          case "run_quick_evaluation": return await this.handleRunQuickEvaluation(args);
           default: throw new Error(`Unknown tool: ${name}`);
         }
       } catch (error) {
@@ -1346,6 +1437,129 @@ class MCPPromptOptimizer {
         return { content: [{ type: "text", text: "Error: SOP exploration requires Innovator tier. Upgrade at /pricing." }] };
       }
       throw new Error(`Failed to explore SOP approaches: ${error.message}`);
+    }
+  }
+
+  async handleGetPromptBySlug(args) {
+    if (!args.slug) throw new Error('Slug is required');
+    try {
+      const result = await this.callBackendAPI(ENDPOINTS.GET_PROMPT_BY_SLUG(args.slug), null, 'GET');
+      let output = `# 📦 Prompt by Slug: \`${args.slug}\`\n\n`;
+      output += `**Title:** ${result.title || 'N/A'}\n`;
+      output += `**Body:**\n\`\`\`\n${result.optimized_prompt || result.body || ''}\n\`\`\`\n`;
+      return { content: [{ type: "text", text: output }] };
+    } catch (error) {
+      const msg = error.message || '';
+      if (msg.includes('403') || msg.includes('TIER')) {
+        return { content: [{ type: "text", text: `Upgrade required: runtime prompt delivery requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      }
+      throw new Error(`Failed to fetch prompt by slug: ${error.message}`);
+    }
+  }
+
+  async handleCompilePrompt(args) {
+    if (!args.slug) throw new Error('Slug is required');
+    try {
+      const result = await this.callBackendAPI(ENDPOINTS.COMPILE_PROMPT(args.slug), { variables: args.variables || {} });
+      const compiled = result.compiled_prompt || result.body || JSON.stringify(result, null, 2);
+      return { content: [{ type: "text", text: `# Compiled Prompt\n\n\`\`\`\n${compiled}\n\`\`\`\n` }] };
+    } catch (error) {
+      const msg = error.message || '';
+      if (msg.includes('403') || msg.includes('TIER')) {
+        return { content: [{ type: "text", text: `Upgrade required: prompt compilation requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      }
+      throw new Error(`Failed to compile prompt: ${error.message}`);
+    }
+  }
+
+  async handleListTemplateVersions(args) {
+    if (!args.template_id) throw new Error('Template ID is required');
+    try {
+      const result = await this.callBackendAPI(ENDPOINTS.TEMPLATE_VERSIONS(args.template_id), null, 'GET');
+      const versions = result.versions || result.data || [];
+      let output = `# 📋 Template Versions\n\n`;
+      output += `**Template ID:** \`${args.template_id}\`\n\n`;
+      if (versions.length === 0) {
+        output += 'No version history found for this template.';
+      } else {
+        versions.forEach((v, i) => {
+          output += `**${i + 1}.** Version ${v.version_number || 'N/A'}`;
+          if (v.created_at) output += ` — ${v.created_at}`;
+          if (v.change_summary) output += `\n   _${v.change_summary}_`;
+          output += `\n`;
+        });
+        output += `\nUse \`rollback_template\` with a version number to restore.`;
+      }
+      return { content: [{ type: "text", text: output }] };
+    } catch (error) {
+      const msg = error.message || '';
+      if (msg.includes('403') || msg.includes('TIER')) {
+        return { content: [{ type: "text", text: `Upgrade required: template versioning requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      }
+      throw new Error(`Failed to list template versions: ${error.message}`);
+    }
+  }
+
+  async handleRollbackTemplate(args) {
+    if (!args.template_id) throw new Error('Template ID is required');
+    if (args.version_number === undefined || args.version_number === null) throw new Error('version_number is required');
+    try {
+      const result = await this.callBackendAPI(ENDPOINTS.ROLLBACK_TEMPLATE(args.template_id, args.version_number), {});
+      const msg = result.message || `Template rolled back to version ${args.version_number}`;
+      return { content: [{ type: "text", text: `# ✅ Rollback Complete\n\n${msg}\n\n**Template ID:** \`${args.template_id}\`\n**Version:** ${args.version_number}` }] };
+    } catch (error) {
+      const msg = error.message || '';
+      if (msg.includes('403') || msg.includes('TIER')) {
+        return { content: [{ type: "text", text: `Upgrade required: template rollback requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      }
+      throw new Error(`Failed to rollback template: ${error.message}`);
+    }
+  }
+
+  async handlePublishTemplate(args) {
+    if (!args.template_id) throw new Error('Template ID is required');
+    try {
+      const result = await this.callBackendAPI(ENDPOINTS.PUBLISH_TEMPLATE(args.template_id), {});
+      const msg = result.message || `Template ${args.template_id} published successfully`;
+      return { content: [{ type: "text", text: `# ✅ Template Published\n\n${msg}\n\nThe template is now available for runtime delivery via \`get_prompt_by_slug\`.` }] };
+    } catch (error) {
+      const msg = error.message || '';
+      if (msg.includes('403') || msg.includes('TIER')) {
+        return { content: [{ type: "text", text: `Upgrade required: template publishing requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      }
+      throw new Error(`Failed to publish template: ${error.message}`);
+    }
+  }
+
+  async handleRunQuickEvaluation(args) {
+    if (!args.prompt) throw new Error('prompt is required');
+    if (!args.original_prompt) throw new Error('original_prompt is required');
+    try {
+      const result = await this.callBackendAPI(ENDPOINTS.QUICK_EVALUATE, {
+        prompt: args.prompt,
+        original_prompt: args.original_prompt,
+        assertions: [
+          {
+            type: "llm-rubric",
+            value: "The optimized prompt is clearer, more specific, and better achieves the original intent than the input prompt.",
+            weight: 1.0
+          }
+        ]
+      });
+      let output = `# 📊 Quick Evaluation Result\n\n`;
+      output += `**Score:** ${result.overall_score != null ? (result.overall_score * 100).toFixed(1) + '%' : 'N/A'}\n`;
+      output += `**Passed:** ${result.passed ? '✅ Yes' : '❌ No'}\n`;
+      if (result.context_detected) output += `**Context:** ${result.context_detected}\n`;
+      if (result.actionable_feedback && result.actionable_feedback.length) {
+        output += `\n**Feedback:**\n${result.actionable_feedback.map(f => `- ${f}`).join('\n')}\n`;
+      }
+      return { content: [{ type: "text", text: output }] };
+    } catch (error) {
+      const msg = error.message || '';
+      if (msg.includes('403') || msg.includes('TIER')) {
+        return { content: [{ type: "text", text: `Upgrade required: evaluations require Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      }
+      throw new Error(`Failed to run quick evaluation: ${error.message}`);
     }
   }
 
