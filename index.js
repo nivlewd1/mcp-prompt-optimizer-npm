@@ -85,7 +85,8 @@ const ENDPOINTS = {
 const DEPLOY_TARGET_ENUM = [
   "claude_code", "claude_desktop", "cursor", "copilot",
   "windsurf", "cline", "zed", "replit", "openai_agents", "ollama",
-  "amazon_q", "aider", "continue_dev", "crewai"
+  "amazon_q", "aider", "continue_dev", "crewai",
+  "codex_cli",
 ];
 
 class MCPPromptOptimizer {

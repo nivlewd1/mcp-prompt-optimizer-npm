@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.2] - 2026-07-05
+
+### Fixed
+- **Stdout JSON-RPC corruption risk**: MCP server startup logs (banner, status lines, key validation, mode indicators) now route to **stderr** instead of stdout. On stdio transports, stdout is the JSON-RPC channel — any non-protocol writes from the server can corrupt the stream and cause client-side parse failures. All server-side logging in `startValidatedMCPServer` and `CloudApiKeyManager._log` (`success`/`info` levels) is now stderr-safe.
+
+### Internal
+- **Contract test** (`tests/contract-check.js` + `tests/fixtures/optimize-response.json`): pins the `/optimize` response shape against the backend Pydantic model (`OptimizeResponse`), including runtime-injected fields (`quota_used`, `quota_limit`) and metadata (`ai_context`, `routing_score`, `routing_tier`, `model_used`). Catches backend response drift before publish. Runs with no network/API key via `npm run test:contract`.
+- **CI workflow** (`.github/workflows/ci.yml`): runs `npm ci`, health check, and the contract check on push/PR across Node 18, 20, and 22. The contract check is the publish gate.
+
 ## [3.6.0] - 2026-06-11
 
 ### Fixed

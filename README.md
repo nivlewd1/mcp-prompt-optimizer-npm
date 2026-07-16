@@ -1,4 +1,4 @@
-# MCP Prompt Optimizer v3.6.0
+# MCP Prompt Optimizer v3.7.2
 
 [![NPM Version](https://img.shields.io/npm/v/mcp-prompt-optimizer)](https://www.npmjs.com/package/mcp-prompt-optimizer)
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](LICENSE)
@@ -26,7 +26,7 @@
 
 **1. Get your API key:**
 
-- **🆓 Free Tier** (`sk-opt-*`): 7 LLM optimizations/month, 1 API key — no credit card required
+- **🆓 Free Tier** (`sk-opt-*`): 20 LLM optimizations/month, 1 API key — no credit card required
 - **⭐ Pro** (`sk-opt-*`): 500 optimizations/month, full model config, Context Engineer
 - **🏢 Enterprise** (`sk-team-*`): Unlimited optimizations, team keys, shared quotas
 
@@ -352,7 +352,7 @@ Configure custom models in the WebUI and the MCP server uses them automatically.
 
 | Plan | Price | Optimizations/month | CE Credits | API Keys |
 |---|---|---|---|---|
-| 🆓 Free | $0 | 7 LLM | — | 1 |
+| 🆓 Free | $0 | 20 LLM | — | 1 |
 | ⭐ Pro | $19/mo | 500 | 5 | 1 |
 | 🏢 Enterprise | Custom | Unlimited | 50 | 10 (shared) |
 
@@ -438,6 +438,11 @@ Windsurf, Cline, VS Code, Zed, Replit, JetBrains IDEs, and Neovim are all suppor
 
 ## 📦 Changelog
 
+### v3.7.2
+- **Stdout / JSON-RPC safety** — All MCP server startup logs (banner, status, mode indicators, key validation) now route to **stderr** instead of stdout. On stdio transports stdout is the JSON-RPC channel; previously any non-protocol writes there risk corrupting the stream. No user-facing change beyond logging.
+- **Contract test** — `npm run test:contract` pins the `/optimize` response shape (Pydantic fields + runtime-injected `quota_used`/`quota_limit` + metadata `routing_score`/`routing_tier`/`model_used`) against a canonical fixture. Catches backend drift before publish.
+- **CI workflow** — `.github/workflows/ci.yml` runs `npm ci` + health check + contract check on push/PR across Node 18, 20, and 22.
+
 ### v3.6.0
 - **Free tier MCP access** — Free users can now create an API key (`sk-opt-*`) and use the MCP server for 7 LLM optimizations/month at no cost. Previously, key creation was blocked in the live service due to a bug introduced when the free-tier launch landed in an unused module. Keys with `subscription_status: NULL` (all free accounts) now validate correctly.
 - **`connect` wizard** — `npx mcp-prompt-optimizer connect` interactively writes your API key to Claude Desktop config on macOS, Windows, and Linux. Replaces manual JSON editing for new users.
@@ -496,4 +501,4 @@ Windsurf, Cline, VS Code, Zed, Replit, JetBrains IDEs, and Neovim are all suppor
 
 ---
 
-*Start free at [promptoptimizer.xyz](https://promptoptimizer.xyz) — 7 LLM optimizations/month, no credit card required.*
+*Start free at [promptoptimizer.xyz](https://promptoptimizer.xyz) — 20 LLM optimizations/month, no credit card required.*
