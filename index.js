@@ -2198,12 +2198,50 @@ async function runConnectWizard() {
   });
 }
 
+function printCliHelp() {
+  console.log(`MCP Prompt Optimizer v${packageJson.version}
+
+Usage:
+  mcp-prompt-optimizer                    Start the MCP server (used by MCP clients)
+  mcp-prompt-optimizer connect            Interactive wizard: add API key to Claude Desktop config
+  mcp-prompt-optimizer check-status       Check API key and quota status
+  mcp-prompt-optimizer validate-key       Validate API key with backend
+  mcp-prompt-optimizer diagnose           Run comprehensive diagnostic
+  mcp-prompt-optimizer clear-cache        Clear validation cache
+  mcp-prompt-optimizer help               Show this help
+  mcp-prompt-optimizer version            Show version information`);
+}
+
+function printCliVersion() {
+  console.log(packageJson.version);
+}
+
+const CLI_COMMANDS = {
+  connect: runConnectWizard,
+  'check-status': () => require('./lib/check-status')().then(() => process.exit(0)),
+  'validate-key': () => require('./lib/validate-key')().then(() => process.exit(0)),
+  'clear-cache': () => require('./lib/clear-cache')().then(() => process.exit(0)),
+  diagnose: () => require('./lib/diagnose')().then(() => process.exit(0)),
+  help: printCliHelp,
+  '--help': printCliHelp,
+  '-h': printCliHelp,
+  version: printCliVersion,
+  '--version': printCliVersion,
+  '-v': printCliVersion,
+};
+
 if (require.main === module) {
   const args = process.argv.slice(2);
-  if (args[0] === 'connect') {
-    runConnectWizard();
-  } else {
+  const cmd = args[0];
+
+  if (!cmd) {
     startValidatedMCPServer();
+  } else if (CLI_COMMANDS[cmd]) {
+    CLI_COMMANDS[cmd]();
+  } else {
+    console.error(`❌ Unknown command: ${cmd}\n`);
+    printCliHelp();
+    process.exit(1);
   }
 }
 

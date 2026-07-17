@@ -1,6 +1,6 @@
 {
   "name": "mcp-prompt-optimizer",
-  "version": "3.7.3",
+  "version": "3.7.4",
   "description": "Professional cloud-based MCP server for AI-powered prompt optimization with intelligent context detection, Bayesian optimization, AG-UI real-time optimization, template auto-save, optimization insights, personal model configuration via WebUI, team collaboration, enterprise-grade features, production resilience, and startup validation. Universal compatibility with Claude Desktop, Cursor, Windsurf, and 17+ MCP clients.",
   "main": "index.js",
   "bin": {
@@ -195,6 +195,15 @@
     "last_sync": "2026-06-01T00:00:00Z"
   },
   "release_notes": {
+    "v3.7.4": {
+      "major_features": [
+        "Fixed: 6 of 8 documented CLI commands (check-status, validate-key, diagnose, clear-cache, help, version) were not implemented in the argv dispatcher and silently started the blocking MCP server instead, hanging the terminal. Now wired to their lib/*.js implementations.",
+        "Fixed: unrecognized CLI arguments now print an error + usage to stderr and exit(1), instead of silently falling through to server startup. Removes the entire hung-terminal bug class, not just the known commands.",
+        "Removed 'test' from documented CLI commands: it mapped to a maintainer-only pre-publish script (tests/test-runner.js) that isn't included in the published package."
+      ],
+      "breaking_changes": [],
+      "migration_guide": "No migration required. Only affects users who ran documented CLI subcommands other than 'connect', which previously hung."
+    },
     "v3.7.3": {
       "major_features": [
         "Docs only: corrected stale free-tier quota in README (7 optimizations/month -> 20), matching the backend enforcement fix"

@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.4] - 2026-07-16
+
+### Fixed
+- **CLI commands were mostly non-functional**: the README documented 8 `mcp-prompt-optimizer <command>` subcommands, but the argv dispatcher only ever recognized `connect`. Running any of `check-status`, `validate-key`, `diagnose`, `clear-cache`, `help`, or `version` silently started the blocking stdio MCP server instead, hanging the terminal. All six are now wired to their existing `lib/*.js` implementations.
+- **Unrecognized commands no longer fall through to the server.** Any argument that isn't a known command now prints an error and usage to stderr and exits 1, instead of silently starting the MCP server. This closes the bug class for future commands too, not just the six fixed here.
+- **Dropped `test` from the documented CLI commands.** It mapped to `tests/test-runner.js`, a maintainer-only pre-publish validation script that isn't included in the published npm package (`tests/` is not in `files`), so it could never have worked for an end user.
+
 ## [3.7.3] - 2026-07-16
 
 ### Fixed

@@ -368,7 +368,6 @@ All plans include AI context detection, template management, personal model conf
 npx mcp-prompt-optimizer connect        # Interactive wizard: add API key to Claude Desktop config
 mcp-prompt-optimizer check-status       # Check API key and quota status
 mcp-prompt-optimizer validate-key       # Validate API key with backend
-mcp-prompt-optimizer test               # Test backend integration
 mcp-prompt-optimizer diagnose           # Run comprehensive diagnostic
 mcp-prompt-optimizer clear-cache        # Clear validation cache
 mcp-prompt-optimizer help               # Show help and setup instructions
