@@ -1056,31 +1056,7 @@ class MCPPromptOptimizer {
       return { content: [{ type: "text", text: this.formatOptimizationInsights(result) }] };
       
     } catch (error) {
-      // Fallback to mock insights
-      const mockInsights = {
-        bayesian_status: {
-          optimization_active: true,
-          total_optimizations: 47,
-          improvement_rate: '23.5%',
-          confidence_score: 0.89
-        },
-        parameter_insights: {
-          most_effective_goals: ['clarity', 'technical_accuracy', 'analytical_depth'],
-          context_performance: {
-            'code_generation': 0.92,
-            'llm_interaction': 0.87,
-            'technical_automation': 0.84
-          },
-          optimization_trends: 'Steady improvement in technical contexts'
-        },
-        recommendations: args.include_recommendations !== false ? [
-          'Focus on technical_accuracy for code generation prompts',
-          'Combine clarity with analytical_depth for best results',
-          'Consider using structured_output context for data tasks'
-        ] : []
-      };
-
-      return { content: [{ type: "text", text: this.formatOptimizationInsights(mockInsights) }] };
+      return { content: [{ type: "text", text: `🧠 Optimization insights are unavailable right now (${error.message}). This is not your data — no insights were generated.` }] };
     }
   }
 
@@ -1095,22 +1071,7 @@ class MCPPromptOptimizer {
       return { content: [{ type: "text", text: this.formatRealTimeStatus(result) }] };
       
     } catch (error) {
-      const mockStatus = {
-        agui_status: 'available',
-        streaming_optimization: true,
-        websocket_support: true,
-        real_time_analytics: true,
-        active_optimizations: 3,
-        average_response_time: '1.2s',
-        features: {
-          live_optimization: true,
-          collaborative_editing: true,
-          instant_feedback: true,
-          performance_monitoring: true
-        }
-      };
-
-      return { content: [{ type: "text", text: this.formatRealTimeStatus(mockStatus) }] };
+      return { content: [{ type: "text", text: `⚡ AG-UI real-time status is unavailable right now (${error.message}).` }] };
     }
   }
 
@@ -1787,7 +1748,7 @@ class MCPPromptOptimizer {
       output += `2. Generate your API key at https://promptoptimizer.xyz/dashboard\n`;
       output += `3. Run in your terminal:\n\n`;
       output += `\`\`\`\nnpx mcp-prompt-optimizer connect\n\`\`\`\n\n`;
-      output += `You get **7 LLM optimizations/month free**. Upgrade anytime for more.\n`;
+      output += `You get **20 LLM optimizations/month free**. Upgrade anytime for more.\n`;
     }
 
     return output;
@@ -1801,24 +1762,29 @@ class MCPPromptOptimizer {
       output += `**Usage:** 🟢 Unlimited\n`;
     } else {
       const used = quota.used || 0;
-      const limit = quota.limit || 5000;
+      const limit = quota.limit;
+
+      if (limit === undefined || limit === null) {
+        output += `**Usage:** ${used} used (limit unavailable — backend did not report a quota limit)\n`;
+      } else {
       const percentage = limit > 0 ? ((used / limit) * 100).toFixed(1) : 0;
-      
+
       let statusIcon = '🟢';
       if (percentage >= 90) statusIcon = '🔴';
       else if (percentage >= 75) statusIcon = '🟡';
-      
+
       output += `**Usage:** ${statusIcon} ${used}/${limit} (${percentage}%)\n`;
 
       const remaining = limit - used;
       if (remaining <= 0) {
         output += `\n❌ **Quota Exhausted** — You have no optimizations remaining this month.\n`;
-        output += `Upgrade at https://promptoptimizer.xyz/local-license\n`;
+        output += `Upgrade at https://promptoptimizer.xyz/pricing\n`;
         output += `*(Quota resets at the start of your next billing cycle)*\n`;
       } else if (percentage >= 90) {
-        output += `\n⚠️ **Critical** — ${remaining} optimization${remaining === 1 ? '' : 's'} remaining. Upgrade at https://promptoptimizer.xyz/local-license\n`;
+        output += `\n⚠️ **Critical** — ${remaining} optimization${remaining === 1 ? '' : 's'} remaining. Upgrade at https://promptoptimizer.xyz/pricing\n`;
       } else if (percentage >= 75) {
         output += `\n⚠️ **Warning** — Approaching your monthly limit.\n`;
+      }
       }
     }
 
@@ -1841,9 +1807,9 @@ class MCPPromptOptimizer {
     }
 
     output += `\n## 🔗 **Account Management**\n`;
-    output += `- Dashboard: https://promptoptimizer-blog.vercel.app/dashboard\n`;
-    output += `- Analytics: https://promptoptimizer-blog.vercel.app/analytics\n`;
-    output += `- Upgrade: https://promptoptimizer.xyz/local-license\n`;
+    output += `- Dashboard: https://promptoptimizer.xyz/dashboard\n`;
+    output += `- Analytics: https://promptoptimizer.xyz/analytics\n`;
+    output += `- Upgrade: https://promptoptimizer.xyz/pricing\n`;
 
     return output;
   }
@@ -1949,41 +1915,40 @@ class MCPPromptOptimizer {
     }
     
     output += `## 🔗 **Advanced Analytics**\n`;
-    output += `- Full Analytics: https://promptoptimizer-blog.vercel.app/analytics\n`;
-    output += `- Performance Dashboard: https://promptoptimizer-blog.vercel.app/dashboard\n`;
+    output += `- Full Analytics: https://promptoptimizer.xyz/analytics\n`;
+    output += `- Performance Dashboard: https://promptoptimizer.xyz/dashboard\n`;
     
     return output;
   }
 
   formatRealTimeStatus(status) {
     let output = `# ⚡ AG-UI Real-Time Status\n\n`;
-    
+    const metrics = status.metrics || {};
+
     output += `## 🚀 **Service Status**\n`;
-    output += `- **AG-UI Status:** ${status.agui_status === 'available' ? '🟢 Available' : '🔴 Unavailable'}\n`;
-    output += `- **Streaming Optimization:** ${status.streaming_optimization ? '✅ Enabled' : '❌ Disabled'}\n`;
-    output += `- **WebSocket Support:** ${status.websocket_support ? '✅ Enabled' : '❌ Disabled'}\n`;
-    output += `- **Real-time Analytics:** ${status.real_time_analytics ? '✅ Enabled' : '❌ Disabled'}\n\n`;
-    
-    if (status.active_optimizations !== undefined) {
-      output += `## 📈 **Current Activity**\n`;
-      output += `- **Active Optimizations:** ${status.active_optimizations}\n`;
-      output += `- **Average Response Time:** ${status.average_response_time}\n\n`;
+    output += `- **AG-UI Status:** ${status.status === 'healthy' ? '🟢 Healthy' : '🔴 Degraded'}\n\n`;
+
+    output += `## 📈 **Current Activity**\n`;
+    output += `- **Active Sessions:** ${metrics.active_sessions ?? 'unknown'}\n`;
+    output += `- **Total Connections:** ${metrics.total_connections ?? 'unknown'}\n`;
+    output += `- **Total Optimizations:** ${metrics.total_optimizations ?? 'unknown'}\n`;
+    if (metrics.uptime_seconds !== undefined) {
+      output += `- **Uptime:** ${Math.round(metrics.uptime_seconds)}s\n`;
     }
-    
-    if (status.features) {
-      const features = status.features;
+    output += `\n`;
+
+    if (metrics.features_enabled) {
       output += `## ⚡ **Available Features**\n`;
-      if (features.live_optimization) output += `✅ Live Optimization\n`;
-      if (features.collaborative_editing) output += `✅ Collaborative Editing\n`;
-      if (features.instant_feedback) output += `✅ Instant Feedback\n`;
-      if (features.performance_monitoring) output += `✅ Performance Monitoring\n`;
+      for (const [feature, enabled] of Object.entries(metrics.features_enabled)) {
+        if (enabled) output += `✅ ${feature}\n`;
+      }
       output += `\n`;
     }
-    
+
     output += `## 🔗 **Real-Time Access**\n`;
-    output += `- Live Dashboard: https://promptoptimizer-blog.vercel.app/live\n`;
+    output += `- Live Dashboard: https://promptoptimizer.xyz/live\n`;
     output += `- WebSocket Endpoint: Available via API\n`;
-    
+
     return output;
   }
 
@@ -2001,7 +1966,7 @@ async function startValidatedMCPServer() {
   try {
     const apiKey = process.env.OPTIMIZER_API_KEY;
     if (!apiKey) {
-      console.error('❌ API key required. Get one at https://promptoptimizer.xyz/local-license');
+      console.error('❌ API key required. Get one free at https://promptoptimizer.xyz/dashboard');
       process.exit(1);
     }
     
@@ -2179,7 +2144,7 @@ async function runConnectWizard() {
     }
     if (ok > 0) {
       console.log('\n👉 Restart your MCP client(s) to activate LLM optimization.');
-      console.log('   Free plan: 7 LLM optimizations/month.');
+      console.log('   Free plan: 20 LLM optimizations/month.');
       console.log('   Upgrade at https://promptoptimizer.xyz/pricing\n');
     }
   }
