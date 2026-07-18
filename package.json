@@ -1,6 +1,6 @@
 {
   "name": "mcp-prompt-optimizer",
-  "version": "3.7.4",
+  "version": "3.7.5",
   "description": "Professional cloud-based MCP server for AI-powered prompt optimization with intelligent context detection, Bayesian optimization, AG-UI real-time optimization, template auto-save, optimization insights, personal model configuration via WebUI, team collaboration, enterprise-grade features, production resilience, and startup validation. Universal compatibility with Claude Desktop, Cursor, Windsurf, and 17+ MCP clients.",
   "main": "index.js",
   "bin": {
@@ -195,6 +195,19 @@
     "last_sync": "2026-06-01T00:00:00Z"
   },
   "release_notes": {
+    "v3.7.5": {
+      "major_features": [
+        "Fixed: 10 MCP tools (generate_agent_sop, transform_for_framework, generate_harness_bundle, explore_sop_approaches, get_prompt_by_slug, compile_prompt, list_template_versions, rollback_template, publish_template, run_quick_evaluation) called backend routes that only accepted a JWT, which this stdio client can never obtain — every call failed unconditionally. Backend now accepts API-key auth on these routes too.",
+        "Fixed: the tier-upgrade message for these tools never fired because the code checked for the literal string '403' inside the error body, which never appears there (that's the HTTP status code, not body text). Now checks the real status code.",
+        "Fixed: get_optimization_insights and get_real_time_status fell back to hardcoded fake data (fabricated optimization counts, fake AG-UI metrics) on any backend error, presented as real account data. Both now report unavailability honestly instead.",
+        "Fixed: formatRealTimeStatus was never reading the AG-UI status endpoint's actual response shape, even on success.",
+        "Fixed: formatQuotaStatus invented a fake 5000 quota limit when the backend didn't report one.",
+        "Fixed: free-tier quota text said 7/month; actual limit is 20.",
+        "Fixed: dead promptoptimizer-blog.vercel.app domain and wrong sk-local-* key-format claims (that's the sibling local package's prefix, not this one's) across index.js, check-status.js, and package.json."
+      ],
+      "breaking_changes": [],
+      "migration_guide": "No migration required. Users who called any of the 10 previously-broken MCP tools will now get real results instead of an auth error."
+    },
     "v3.7.4": {
       "major_features": [
         "Fixed: 6 of 8 documented CLI commands (check-status, validate-key, diagnose, clear-cache, help, version) were not implemented in the argv dispatcher and silently started the blocking MCP server instead, hanging the terminal. Now wired to their lib/*.js implementations.",

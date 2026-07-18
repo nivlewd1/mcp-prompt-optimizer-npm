@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.5] - 2026-07-18
+
+### Fixed
+- **10 MCP tools were unconditionally broken**: `generate_agent_sop`, `transform_for_framework`, `generate_harness_bundle`, `explore_sop_approaches`, `get_prompt_by_slug`, `compile_prompt`, `list_template_versions`, `rollback_template`, `publish_template`, and `run_quick_evaluation` all called backend routes that only accepted a JWT — a credential this stdio client can never obtain (no browser, no login flow). Every call to these tools failed with an auth error, always. Backend now accepts API-key auth on these routes; verified the fix doesn't expand what a key is authorized to do (every route is scoped to the calling account's own data, same as routes that already worked).
+- **Tier-upgrade messages never fired**: the 403-detection check looked for the literal string `'403'` inside the error body, which never appears there — only the HTTP status code carries it. Now checks the real status code, so upgrade prompts actually show up when a real tier gate is hit.
+- **Fabricated fallback data**: `get_optimization_insights` and `get_real_time_status` silently returned hardcoded fake numbers (fake optimization counts, fake AG-UI metrics) on any backend error, indistinguishable from real account data. Both now say the data is unavailable instead of inventing it.
+- **`formatRealTimeStatus` read the wrong fields**: it never matched the AG-UI status endpoint's actual response shape, even when the call succeeded.
+- **`formatQuotaStatus` invented a fake `5000` quota limit** when the backend didn't report one.
+- **Free-tier quota text said 7/month**; the real limit is 20.
+- **Dead domain and wrong key-format references**: `promptoptimizer-blog.vercel.app` no longer resolves; some messages also claimed `sk-local-*` was a valid key format for this package (that's the sibling local package's prefix, not this one's).
+
 ## [3.7.4] - 2026-07-16
 
 ### Fixed
