@@ -1395,8 +1395,8 @@ class MCPPromptOptimizer {
         }]
       };
     } catch (error) {
-      if (error.message && error.message.includes('403')) {
-        return { content: [{ type: "text", text: "Error: SOP exploration requires Innovator tier. Upgrade at /pricing." }] };
+      if (error.statusCode === 403) {
+        return { content: [{ type: "text", text: `Error: SOP exploration requires Innovator tier. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };
       }
       throw new Error(`Failed to explore SOP approaches: ${error.message}`);
     }
@@ -1411,9 +1411,8 @@ class MCPPromptOptimizer {
       output += `**Body:**\n\`\`\`\n${result.optimized_prompt || result.body || ''}\n\`\`\`\n`;
       return { content: [{ type: "text", text: output }] };
     } catch (error) {
-      const msg = error.message || '';
-      if (msg.includes('403') || msg.includes('TIER')) {
-        return { content: [{ type: "text", text: `Upgrade required: runtime prompt delivery requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      if (error.statusCode === 403) {
+        return { content: [{ type: "text", text: `Upgrade required: runtime prompt delivery requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };
       }
       throw new Error(`Failed to fetch prompt by slug: ${error.message}`);
     }
@@ -1426,9 +1425,8 @@ class MCPPromptOptimizer {
       const compiled = result.compiled_prompt || result.body || JSON.stringify(result, null, 2);
       return { content: [{ type: "text", text: `# Compiled Prompt\n\n\`\`\`\n${compiled}\n\`\`\`\n` }] };
     } catch (error) {
-      const msg = error.message || '';
-      if (msg.includes('403') || msg.includes('TIER')) {
-        return { content: [{ type: "text", text: `Upgrade required: prompt compilation requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      if (error.statusCode === 403) {
+        return { content: [{ type: "text", text: `Upgrade required: prompt compilation requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };
       }
       throw new Error(`Failed to compile prompt: ${error.message}`);
     }
@@ -1454,9 +1452,8 @@ class MCPPromptOptimizer {
       }
       return { content: [{ type: "text", text: output }] };
     } catch (error) {
-      const msg = error.message || '';
-      if (msg.includes('403') || msg.includes('TIER')) {
-        return { content: [{ type: "text", text: `Upgrade required: template versioning requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      if (error.statusCode === 403) {
+        return { content: [{ type: "text", text: `Upgrade required: template versioning requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };
       }
       throw new Error(`Failed to list template versions: ${error.message}`);
     }
@@ -1470,9 +1467,8 @@ class MCPPromptOptimizer {
       const msg = result.message || `Template rolled back to version ${args.version_number}`;
       return { content: [{ type: "text", text: `# ✅ Rollback Complete\n\n${msg}\n\n**Template ID:** \`${args.template_id}\`\n**Version:** ${args.version_number}` }] };
     } catch (error) {
-      const msg = error.message || '';
-      if (msg.includes('403') || msg.includes('TIER')) {
-        return { content: [{ type: "text", text: `Upgrade required: template rollback requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      if (error.statusCode === 403) {
+        return { content: [{ type: "text", text: `Upgrade required: template rollback requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };
       }
       throw new Error(`Failed to rollback template: ${error.message}`);
     }
@@ -1485,9 +1481,8 @@ class MCPPromptOptimizer {
       const msg = result.message || `Template ${args.template_id} published successfully`;
       return { content: [{ type: "text", text: `# ✅ Template Published\n\n${msg}\n\nThe template is now available for runtime delivery via \`get_prompt_by_slug\`.` }] };
     } catch (error) {
-      const msg = error.message || '';
-      if (msg.includes('403') || msg.includes('TIER')) {
-        return { content: [{ type: "text", text: `Upgrade required: template publishing requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      if (error.statusCode === 403) {
+        return { content: [{ type: "text", text: `Upgrade required: template publishing requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };
       }
       throw new Error(`Failed to publish template: ${error.message}`);
     }
@@ -1517,9 +1512,8 @@ class MCPPromptOptimizer {
       }
       return { content: [{ type: "text", text: output }] };
     } catch (error) {
-      const msg = error.message || '';
-      if (msg.includes('403') || msg.includes('TIER')) {
-        return { content: [{ type: "text", text: `Upgrade required: evaluations require Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${msg}` }] };
+      if (error.statusCode === 403) {
+        return { content: [{ type: "text", text: `Upgrade required: evaluations require Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };
       }
       throw new Error(`Failed to run quick evaluation: ${error.message}`);
     }
@@ -1592,7 +1586,9 @@ class MCPPromptOptimizer {
               } catch {
                 errorMessage = `HTTP ${res.statusCode}: ${responseData}`;
               }
-              reject(new Error(errorMessage));
+              const httpError = new Error(errorMessage);
+              httpError.statusCode = res.statusCode;
+              reject(httpError);
             }
           } catch (parseError) {
             reject(new Error(`Invalid response format: ${parseError.message}`));
