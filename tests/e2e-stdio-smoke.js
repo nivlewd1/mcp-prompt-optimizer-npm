@@ -39,7 +39,7 @@ function assert(condition, message) {
  * Spawn the server and exchange JSON-RPC messages over stdio.
  * Resolves with { rpcResponses, stderr, exitCode, exitedBeforeAnyRpc }.
  */
-function runServer({ env, requests, timeoutMs = 15000 }) {
+function runServer({ env, requests, timeoutMs = 15000, waitForId = null }) {
   return new Promise((resolve) => {
     const child = spawn(process.execPath, [INDEX_JS], {
       env: { ...process.env, ...env },
@@ -68,12 +68,20 @@ function runServer({ env, requests, timeoutMs = 15000 }) {
         const line = stdoutBuf.slice(0, idx).trim();
         stdoutBuf = stdoutBuf.slice(idx + 1);
         if (!line) continue;
+        let parsed;
         try {
-          rpcResponses.push(JSON.parse(line));
+          parsed = JSON.parse(line);
+          rpcResponses.push(parsed);
         } catch (_) {
           // Non-JSON line on stdout would itself be a protocol violation;
           // record it as a synthetic response so assertions can catch it.
           rpcResponses.push({ __nonJsonStdoutLine: line });
+        }
+        if (waitForId !== null && parsed && parsed.id === waitForId) {
+          // Grace period for any trailing output, then tear down via kill()
+          // — never via stdin.end(), which some stdio transports treat as an
+          // immediate shutdown signal and can race the in-flight response.
+          setTimeout(() => finish(), 150);
         }
       }
     });
@@ -91,19 +99,26 @@ function runServer({ env, requests, timeoutMs = 15000 }) {
     });
 
     // Fire the requests, one per tick, giving the process time to boot.
+    // requests[] entries are { msg, delayAfterMs } — delayAfterMs is
+    // harness-only timing and must never be embedded in the JSON-RPC
+    // payload itself (an SDK with strict request-schema validation will
+    // reject/silently drop a message carrying an unrecognized top-level
+    // field).
     (async () => {
-      for (const req of requests) {
+      for (const { msg, delayAfterMs } of requests) {
         if (child.exitCode !== null || settled) break;
         try {
-          child.stdin.write(JSON.stringify(req) + '\n');
+          child.stdin.write(JSON.stringify(msg) + '\n');
         } catch (_) {
           break;
         }
-        await new Promise((r) => setTimeout(r, req.__delayAfterMs ?? 400));
+        await new Promise((r) => setTimeout(r, delayAfterMs ?? 400));
       }
     })();
   });
 }
+
+const wire = (msg, delayAfterMs) => ({ msg, delayAfterMs });
 
 const initializeRequest = {
   jsonrpc: '2.0',
@@ -180,21 +195,24 @@ async function testFullProtocolWithRealKey() {
   const result = await runServer({
     env: { OPTIMIZER_API_KEY: realKey },
     requests: [
-      initializeRequest,
-      { ...initializedNotification, __delayAfterMs: 200 },
-      toolsListRequest,
-      {
-        jsonrpc: '2.0',
-        id: 3,
-        method: 'tools/call',
-        params: {
-          name: 'optimize_prompt',
-          arguments: { prompt: 'help me write a function that reverses a linked list', goals: ['clarity'] },
+      wire(initializeRequest, 500),
+      wire(initializedNotification, 300),
+      wire(toolsListRequest, 500),
+      wire(
+        {
+          jsonrpc: '2.0',
+          id: 3,
+          method: 'tools/call',
+          params: {
+            name: 'optimize_prompt',
+            arguments: { prompt: 'help me write a function that reverses a linked list', goals: ['clarity'] },
+          },
         },
-        __delayAfterMs: 15000,
-      },
+        1000
+      ),
     ],
     timeoutMs: 30000,
+    waitForId: 3,
   });
 
   const initResp = result.rpcResponses.find((r) => r.id === 1);

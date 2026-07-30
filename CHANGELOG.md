@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.1] - 2026-07-29
+
+### Fixed
+- **Security: the validation cache let any API key inherit a different key's cached identity.**
+  `~/.mcp-cloud-api-cache.json` is a single file per machine, not namespaced per key. Found live
+  while testing against a real registered key: validating key A succeeds and caches its result;
+  minutes later, validating a completely different, invalid key B gets a clean 401 from the
+  backend — but the client's fallback logic didn't check *which* key the cached entry belonged to,
+  and didn't check whether the error was a definitive rejection versus a network outage. It
+  silently returned key A's cached "valid" data and started the server authenticated as A's
+  account, having never actually validated B. Any string passed as `OPTIMIZER_API_KEY` within the
+  cache's 1-hour window (2 hours via the short-term fallback tier) would have worked, as long as
+  *some* real key had been validated on that machine recently.
+  Fixed two ways: (1) a cached entry is only used if its stored `apiKeyPrefix` matches the key
+  currently being validated, and (2) cache fallback is skipped entirely on a 4xx rejection —
+  it's reserved for genuine network/5xx outages of the *same* already-cached key, which was
+  always the intent (the surrounding code already distinguished 4xx from network errors for its
+  error-message hint text; the fallback branch above it just never used that distinction).
+  Added a network-free regression test (`tests/quick-test.js`) that seeds the cache with one
+  key's data, forces a 401 for a different key, and asserts the second key never inherits the
+  first's identity — and a second check confirming the legitimate same-key network-outage
+  fallback still works unchanged.
+
 ## [3.8.0] - 2026-07-29
 
 ### Added
