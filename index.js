@@ -187,6 +187,16 @@ class MCPPromptOptimizer {
                     description: "Narrative description of what a successful optimized output achieves (e.g. 'reader understands why churn drives flat revenue even with user growth')."
                   }
                 }
+              },
+              reasoning_effort: {
+                type: "string",
+                enum: ["minimal", "standard", "deep"],
+                description: "How much reasoning to apply: 'minimal' biases toward faster/cheaper routing, 'standard' is the default, 'deep' biases toward the LLM tier for maximum analysis. Most useful when calling this tool programmatically in a loop or pipeline, where there's no human watching each call to decide whether it's worth paying for more depth."
+              },
+              execution_shape: {
+                type: "string",
+                enum: ["direct", "hybrid", "multi_agent"],
+                description: "Execution style, independent of the tier the prompt would normally route to: 'direct' is single-pass, 'hybrid' adds rules+LLM verification, 'multi_agent' forces plan-and-execute with sub-agents regardless of the prompt's complexity. 'multi_agent' is downgraded to 'direct' on tiers without repair access — the response echoes back whichever one actually ran, so you can detect a downgrade."
               }
             },
             required: ["prompt"]
@@ -442,6 +452,24 @@ class MCPPromptOptimizer {
               sop_content: {
                 type: "string",
                 description: "The SOP content to base the harness on (required if no session_id)."
+              },
+              agent_read_only: {
+                type: "boolean",
+                description: (
+                  "Narrow the generated Claude Code subagent's tools to Read/Grep/Glob only. "
+                  + "Set this for audit/review workflows that should never edit or execute anything. "
+                  + "Default: false (full capability)."
+                )
+              },
+              agent_harness: {
+                type: "string",
+                enum: ["claude-sdk", "codex", "pi"],
+                description: (
+                  "Execution backend for the generated agent.yaml: 'claude-sdk' (needs ANTHROPIC_API_KEY), "
+                  + "'codex' (needs OPENROUTER_API_KEY or OPENAI_API_KEY), or 'pi' (needs PI_API_KEY). "
+                  + "Set this to match the API key available wherever the bundle will actually run — "
+                  + "the default is per-deploy-target (usually claude-sdk) and won't know which key you have."
+                )
               }
             },
             required: ["goal"]
@@ -931,10 +959,17 @@ class MCPPromptOptimizer {
         }
       }
 
+      if (args.reasoning_effort) {
+        optimizationPayload.reasoning_effort = args.reasoning_effort;
+      }
+      if (args.execution_shape) {
+        optimizationPayload.execution_shape = args.execution_shape;
+      }
+
       const result = await this.callBackendAPI(ENDPOINTS.OPTIMIZE, optimizationPayload);
-      
+
       const enableBayesian = args.enable_bayesian !== false && this.bayesianOptimizationEnabled;
-      return { content: [{ type: "text", text: this.formatOptimizationResult(result, { detectedContext, enableBayesian }) }] };
+      return { content: [{ type: "text", text: this.formatOptimizationResult(result, { detectedContext, enableBayesian, requestedExecutionShape: args.execution_shape }) }] };
       
     } catch (error) {
       if (error.message.includes('Network') || error.message.includes('DNS') || error.message.includes('timeout') || error.message.includes('Connection')) {
@@ -1307,6 +1342,8 @@ class MCPPromptOptimizer {
       user_goal: args.goal,
       sop_content: args.sop_content || "",
     };
+    if (args.agent_read_only) payload.agent_read_only = true;
+    if (args.agent_harness) payload.agent_harness = args.agent_harness;
 
     // If session_id provided, first fetch session artifacts for sop_content
     if (args.session_id) {
@@ -1654,6 +1691,11 @@ class MCPPromptOptimizer {
     output += `**AI Context:** ${result.metadata?.context_detection?.ai_context || result.metadata?.ai_context || context.detectedContext}\n`;
     if (result.metadata?.routing_score != null) {
       output += `**Routing Score:** ${result.metadata.routing_score.toFixed(3)} (${result.metadata?.routing_tier || 'unknown'})\n`;
+    }
+    if (result.execution_shape && context.requestedExecutionShape && result.execution_shape !== context.requestedExecutionShape) {
+      output += `**Execution Shape:** \`${result.execution_shape}\` *(requested \`${context.requestedExecutionShape}\`, downgraded — your tier doesn't have repair access)*\n`;
+    } else if (result.reasoning_effort && result.reasoning_effort !== 'standard') {
+      output += `**Reasoning Effort:** \`${result.reasoning_effort}\`\n`;
     }
     if (!result.rules_based && !result.fallback_mode && result.metadata?.model_used) {
       output += `**Model:** ${result.metadata.model_used}\n`;

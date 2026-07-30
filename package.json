@@ -1,6 +1,6 @@
 {
   "name": "mcp-prompt-optimizer",
-  "version": "3.7.5",
+  "version": "3.8.0",
   "description": "Professional cloud-based MCP server for AI-powered prompt optimization with intelligent context detection, Bayesian optimization, AG-UI real-time optimization, template auto-save, optimization insights, personal model configuration via WebUI, team collaboration, enterprise-grade features, production resilience, and startup validation. Universal compatibility with Claude Desktop, Cursor, Windsurf, and 17+ MCP clients.",
   "main": "index.js",
   "bin": {
@@ -25,6 +25,7 @@
     "test:runner": "node tests/test-runner.js",
     "test:simple": "node tests/simple-test.js",
     "test:contract": "node tests/contract-check.js",
+    "test:e2e": "node tests/e2e-stdio-smoke.js",
     "pretest": "npm run health-check",
     "prepublishOnly": "npm run test:quick",
     "version": "echo 'Updating version...' && npm run test:quick"

@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.0] - 2026-07-29
+
+### Added
+- **`optimize_prompt` gains `reasoning_effort` and `execution_shape`**, the two Track C1 controls
+  that previously only reached `/api/v1/optimize` (the WebUI's endpoint) — `/api/v1/mcp/optimize`
+  (what this tool actually calls) never had them wired in at all, a pre-existing architectural
+  gap, not a regression. These matter *more* for a programmatic/agentic caller than a WebUI user:
+  there's no human watching each call to decide whether a prompt is worth paying for deeper
+  reasoning, or to notice a `multi_agent` request quietly running the LLM engine regardless of
+  the prompt's complexity. `multi_agent` is gated the same way on this endpoint as it is on
+  `/optimize` (`_gate_execution_shape`, downgraded to `direct` on tiers without repair access);
+  the response echoes back the *effective* shape that ran, and the formatter now surfaces a
+  downgrade when one happens. `stop_rule` (the third Track C1 control) is deliberately **not**
+  exposed here: this endpoint never runs the quick-eval-then-repair flow that gives `stop_rule`
+  any effect, so accepting it would advertise a guardrail that does nothing. Backend change
+  landed alongside this (`app/api/mcp_router.py`), verified with new endpoint tests covering the
+  free-tier downgrade, the pro-tier non-downgrade, and the team/enterprise-default non-downgrade
+  path (the last one guards against team keys getting silently capped if their tier lookup ever
+  comes back empty) — full backend suite (1740 passed) confirmed no regressions.
+- **`generate_harness_bundle` gains `agent_read_only` and `agent_harness`**, mirroring the two
+  optional fields the backend's `HarnessBundleRequest` already accepts. `agent_harness` lets the
+  caller pick the generated agent.yaml's execution backend (`claude-sdk`/`codex`/`pi`) to match
+  whichever API key they actually have available wherever the bundle runs — without it, the
+  bundle silently defaults per-deploy-target (usually `claude-sdk`) and fails at runtime with a
+  missing-credential error if that's not the key the user holds. `agent_read_only` narrows the
+  generated subagent's tools to Read/Grep/Glob, for audit/review workflows that should never be
+  able to edit or execute anything. Both optional, both already validated server-side (a bad
+  `agent_harness` value gets a clear 422 listing valid choices).
+- **`tests/e2e-stdio-smoke.js`**: black-box test that spawns the published binary as a real
+  subprocess and speaks JSON-RPC over stdio, exactly as an external MCP client would. Confirms
+  clean startup/shutdown behavior for missing/malformed/unregistered keys, including a live round
+  trip to the deployed backend. Full `tools/call` coverage requires `OPTIMIZER_API_KEY` set to a
+  real, backend-registered key — this package has no reachable mock/dev bypass (`developmentMode`
+  is hardcoded `false` in `index.js`; see the `dev`/`dev:mock` npm scripts, which are currently
+  dead for the same reason).
+
 ## [3.7.5] - 2026-07-18
 
 ### Fixed
