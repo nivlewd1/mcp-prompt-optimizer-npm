@@ -49,7 +49,7 @@ async function runCanary() {
   const first = result.content[0];
   assert.strictEqual(first.type, 'text', `result.content[0].type is "${first.type}", expected "text"`);
   assert.ok(typeof first.text === 'string' && first.text.length > 0, 'result.content[0].text is empty or not a string');
-  assert.ok(!first.text.toLowerCase().includes('fallback_mode'), 'response indicates the client fell back to local rules-based optimization instead of a real backend response — see the fallback branch in index.js handleOptimizePrompt');
+  assert.ok(!first.text.toLowerCase().includes('backend unavailable'), 'response indicates the client fell back to local rules-based optimization instead of a real backend response — see the network/DNS/timeout/Connection catch branch in index.js handleOptimizePrompt (index.js:975-982)');
 
   console.log('✅ Canary passed — backend responded with the expected shape.');
   console.log(`   Response preview: ${first.text.slice(0, 120)}...`);
