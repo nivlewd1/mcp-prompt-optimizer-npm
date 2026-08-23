@@ -26,6 +26,7 @@
     "test:simple": "node tests/simple-test.js",
     "test:contract": "node tests/contract-check.js",
     "test:e2e": "node tests/e2e-stdio-smoke.js",
+    "test:prod-canary": "node tests/prod-canary.js",
     "pretest": "npm run health-check",
     "prepublishOnly": "npm run test:quick",
     "version": "echo 'Updating version...' && npm run test:quick"
