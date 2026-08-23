@@ -49,6 +49,8 @@ async function runCanary() {
   const first = result.content[0];
   assert.strictEqual(first.type, 'text', `result.content[0].type is "${first.type}", expected "text"`);
   assert.ok(typeof first.text === 'string' && first.text.length > 0, 'result.content[0].text is empty or not a string');
+  assert.ok(!/\bundefined\b/.test(first.text), 'rendered output contains "undefined" — a field index.js reads was renamed or removed on the backend response');
+  assert.ok(!first.text.includes('NaN'), 'rendered output contains "NaN" — a numeric field (confidence_score) was renamed or removed');
   assert.ok(!first.text.toLowerCase().includes('optimized using local rule templates'), 'response indicates the client fell back to local rules-based optimization instead of a real backend response — see the network/DNS/timeout/Connection catch branch in index.js handleOptimizePrompt (index.js:975-982), which calls rulesBasedOptimize (rules_based: true) and sets fallback_mode: true, rendered by formatOptimizationResult (index.js:1664-1667)');
 
   console.log('✅ Canary passed — backend responded with the expected shape.');
