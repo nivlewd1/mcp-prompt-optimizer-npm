@@ -1,4 +1,4 @@
-# MCP Prompt Optimizer v3.7.2
+# MCP Prompt Optimizer
 
 [![NPM Version](https://img.shields.io/npm/v/mcp-prompt-optimizer)](https://www.npmjs.com/package/mcp-prompt-optimizer)
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](LICENSE)
@@ -443,7 +443,7 @@ Windsurf, Cline, VS Code, Zed, Replit, JetBrains IDEs, and Neovim are all suppor
 - **CI workflow** — `.github/workflows/ci.yml` runs `npm ci` + health check + contract check on push/PR across Node 18, 20, and 22.
 
 ### v3.6.0
-- **Free tier MCP access** — Free users can now create an API key (`sk-opt-*`) and use the MCP server for 7 LLM optimizations/month at no cost. Previously, key creation was blocked in the live service due to a bug introduced when the free-tier launch landed in an unused module. Keys with `subscription_status: NULL` (all free accounts) now validate correctly.
+- **Free tier MCP access** — Free users can now create an API key (`sk-opt-*`) and use the MCP server at no cost (currently 20 LLM optimizations/month). Previously, key creation was blocked in the live service due to a bug introduced when the free-tier launch landed in an unused module. Keys with `subscription_status: NULL` (all free accounts) now validate correctly.
 - **`connect` wizard** — `npx mcp-prompt-optimizer connect` interactively writes your API key to Claude Desktop config on macOS, Windows, and Linux. Replaces manual JSON editing for new users.
 - **Upsell block** — Local rules fallback output now includes a concise upgrade prompt with a one-command onboarding path when no API key is configured.
 
