@@ -13,6 +13,7 @@ const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio
 const { CallToolRequestSchema, ListToolsRequestSchema } = require('@modelcontextprotocol/sdk/types.js');
 const https = require('https');
 const CloudApiKeyManager = require('./lib/api-key-manager');
+const { formatQuickEvaluation } = require('./lib/format-evaluation');
 const packageJson = require('./package.json');
 const OPTIMIZATION_TEMPLATES = require('./lib/optimization-templates.json');
 
@@ -1540,14 +1541,7 @@ class MCPPromptOptimizer {
           }
         ]
       });
-      let output = `# 📊 Quick Evaluation Result\n\n`;
-      output += `**Score:** ${result.overall_score != null ? (result.overall_score * 100).toFixed(1) + '%' : 'N/A'}\n`;
-      output += `**Passed:** ${result.passed ? '✅ Yes' : '❌ No'}\n`;
-      if (result.context_detected) output += `**Context:** ${result.context_detected}\n`;
-      if (result.actionable_feedback && result.actionable_feedback.length) {
-        output += `\n**Feedback:**\n${result.actionable_feedback.map(f => `- ${f}`).join('\n')}\n`;
-      }
-      return { content: [{ type: "text", text: output }] };
+      return { content: [{ type: "text", text: formatQuickEvaluation(result) }] };
     } catch (error) {
       if (error.statusCode === 403) {
         return { content: [{ type: "text", text: `Upgrade required: evaluations require Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };

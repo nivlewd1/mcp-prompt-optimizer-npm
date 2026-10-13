@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.5] - 2026-10-13
+
+### Fixed
+- **`run_quick_evaluation` no longer shows a failed judge as a score or a plain "No".** When the
+  evaluator errored, the tool printed "0.0% No" (or, with a partly failed run, "100% Yes"),
+  both of which read as a real verdict. It now says "Not judged" (every assertion errored) or
+  "Not fully judged: N of M assertions could not be graded" (some did), labels any remaining score
+  as covering graded assertions only, and names the judge model. Works with older backends.
+
 ## [3.8.4] - 2026-10-08
 
 ### Changed
