@@ -21,7 +21,10 @@ assert(/Not fully judged\. 1 of 2/.test(t) && /graded assertions only/.test(t) &
 // partial failure, OLD backend (passed true, no degraded field): still caught from evaluator_error
 t = formatQuickEvaluation({ overall_score: 1.0, passed: true, assertion_results: [ok, bad] });
 assert(/Not fully judged/.test(t) && !/✅ Yes/.test(t));
+// weighted mean passed while an assertion failed on its own: say so
+t = formatQuickEvaluation({ overall_score: 0.8, passed: true, failed_count: 1, assertion_results: [ok, { ...ok, passed: false }] });
+assert(/✅ Yes/.test(t) && /1 assertion\(s\) failed on their own/.test(t));
 // no assertion_results at all: do not crash
 t = formatQuickEvaluation({ overall_score: 0.5, passed: false });
 assert(/\*\*Score:\*\* 50\.0%/.test(t));
-console.log('format-evaluation: 6 passed');
+console.log('format-evaluation: 7 passed');
