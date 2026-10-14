@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `generate_agent_sop` now applies `intent_frame` (perspective, out of scope, success criteria): the backend has no such field, so it is folded into the prompt instead of being silently dropped.
 - Backend errors are readable: validation errors list the field and reason, a missing template variable says which one, and unknown deploy targets are named, instead of raw JSON.
 - `generate_skill_package` shows its session ID, so `generate_harness_bundle` can actually reuse the SOP through its `session_id` argument. The wait for a package to finish is 180 seconds (was 120).
+- When the backend is unreachable, `optimize_prompt` now says so plainly instead of telling a user with a working key to "connect your API key" and pitching a sign-up, and it picks the local rules template from the prompt (a code prompt used to get the human-communication template). Operator-only advice ("configure OPENROUTER_API_KEY in the backend") is gone from user-facing text.
 - `rollback_template` reports the new current version instead of echoing the version you restored from.
 - `run_quick_evaluation` shows the judge's reason when a prompt fails, instead of only a bare score.
 

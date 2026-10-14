@@ -135,6 +135,16 @@ function assertRequired(opt, suffix) {
     assert.ok(/sess-123/.test(out.content[0].text) && /session_id/.test(out.content[0].text));
   });
 
+  await check('backend-down fallback says so, picks a sensible context, and does not pitch a sign-up to a keyed user', async () => {
+    const opt = new MCPPromptOptimizer();
+    const r = opt.rulesBasedOptimize('write a python function to sort a list', opt.generateMockContextDetection('write a python function to sort a list').primary_context, ['clarity']);
+    r.fallback_mode = true;
+    const out = opt.formatOptimizationResult(r, { detectedContext: 'code_generation' });
+    assert.ok(/backend unreachable/i.test(out), 'does not say the backend is unreachable');
+    assert.ok(!/connect your API key|Unlock LLM|Sign up at|npx mcp-prompt-optimizer connect/i.test(out), 'pitches sign-up to a user who already has a key');
+    assert.ok(/software_engineering|code/i.test(r.template_used), `code prompt got template ${r.template_used}`);
+  });
+
   if (failures) {
     console.error(`\nREQUEST CONTRACT TEST FAILED — ${failures} check(s) failed.`);
     process.exit(1);

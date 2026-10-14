@@ -964,7 +964,7 @@ class MCPPromptOptimizer {
           console.error(`Detected AI Context from backend: ${detectedContext}`);
         } catch (contextError) {
           console.error(`Failed to detect AI context from backend, falling back to default: ${contextError.message}`);
-          detectedContext = 'human_communication'; // Fallback
+          detectedContext = this.generateMockContextDetection(args.prompt).primary_context; // local detector, not a blanket default
         }
       }
 
@@ -1000,7 +1000,7 @@ class MCPPromptOptimizer {
       
     } catch (error) {
       if (error.message.includes('Network') || error.message.includes('DNS') || error.message.includes('timeout') || error.message.includes('Connection')) {
-        const fallbackContext = args.ai_context || 'human_communication';
+        const fallbackContext = args.ai_context || this.generateMockContextDetection(args.prompt).primary_context;
         const fallbackEnableBayesian = args.enable_bayesian !== false && this.bayesianOptimizationEnabled;
         const fallbackResult = this.rulesBasedOptimize(args.prompt, fallbackContext, args.goals || ['clarity']);
         fallbackResult.fallback_mode = true;
@@ -1734,12 +1734,12 @@ class MCPPromptOptimizer {
     let output;
     if (result.rules_based) {
       if (result.fallback_mode) {
-        output = `# 🔧 Prompt Optimized (Local Rules)\n\n`;
-        output += `*Optimized using local rule templates — LLM quality available once you connect your API key.*\n\n`;
+        output = `# 🔧 Prompt Optimized (Local Rules — backend unreachable)\n\n`;
+        output += `*Your API key is fine, but the optimizer service could not be reached just now, so local rule templates were applied. Try again in a moment for full LLM optimization.*\n\n`;
       } else {
         output = `# 🔧 Rules-Based Optimization Applied\n\n`;
-        output += `*API key not validated — optimized using local rule templates. `;
-        output += `Set \`MCP_API_KEY\` for full LLM optimization.*\n\n`;
+        output += `*Optimized using local rule templates. `;
+        output += `Check that \`OPTIMIZER_API_KEY\` is set to a valid key for full LLM optimization.*\n\n`;
       }
       output += `**Template:** \`${result.template_used || 'general'}\`\n\n`;
       output += `**Optimized Prompt:**\n\`\`\`\n${result.optimized_prompt}\n\`\`\`\n\n`;
@@ -1750,8 +1750,8 @@ class MCPPromptOptimizer {
     } else {
       output = `# 🎯 Optimized Prompt\n\n${result.optimized_prompt}\n\n`;
       if (result.confidence_score < 0.25) {
-        output += `> ℹ️ *Low confidence indicates the backend applied rules-based optimization (no LLM). `;
-        output += `Ensure \`OPENROUTER_API_KEY\` is configured in the backend for full LLM enhancement.*\n\n`;
+        output += `> ℹ️ *Low confidence: the service used rule-based optimization for this prompt rather than the LLM. `;
+        output += `Try again, or add detail to the prompt for a stronger result.*\n\n`;
       }
     }
     if (result.rules_based) {
@@ -1846,7 +1846,8 @@ class MCPPromptOptimizer {
         }
       }
       output += `\n🔗 **Quick Actions**\n- Dashboard: https://promptoptimizer.xyz/dashboard\n- Analytics: https://promptoptimizer.xyz/analytics\n`;
-    } else {
+    } else if (!result.fallback_mode) {
+      // fallback_mode means the backend was unreachable for a keyed user, so a sign-up pitch would be wrong.
       const confPct = Math.round((result.confidence_score || 0) * 100);
       output += `\n---\n`;
       output += `\n💡 **Unlock LLM Optimization — Free**\n\n`;
