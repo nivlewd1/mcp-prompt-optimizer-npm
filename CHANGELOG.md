@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.6] - 2026-10-13
+
+### Fixed
+- **README no longer says Context Engineer tools require a Pro or Enterprise subscription.** Free accounts get a
+  limited monthly Context Engineering allowance on the default model; Pro and Enterprise get more, and
+  `generate_harness_bundle` still requires Pro or Enterprise.
+
+### Removed
+- **`agent_spec` value of `generate_skill_package`'s `format` option.** The backend never produced a different
+  output for it; `format` now accepts only `knowledge_doc` (the default).
+
 ## [3.8.5] - 2026-10-13
 
 ### Fixed

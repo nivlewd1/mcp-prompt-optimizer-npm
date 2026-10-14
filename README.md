@@ -253,7 +253,7 @@ Real-time optimization status and AG-UI capabilities. Requires the feature to be
 
 ## 🤖 Context Engineer (CE) Tools
 
-Requires a Pro or Enterprise subscription. CE tools generate agentic scaffolding artifacts (SOPs, skill packages, framework code) directly in your IDE.
+Free accounts get a limited monthly Context Engineering allowance on the default model; Pro and Enterprise get more, and `generate_harness_bundle` requires Pro or Enterprise. CE tools generate agentic scaffolding artifacts (SOPs, skill packages, framework code) directly in your IDE.
 
 ### `generate_agent_sop`
 Generate a structured SOP document for an AI agent from a goal description. Returns markdown SOP ready for use.
@@ -274,7 +274,7 @@ Generate a complete skill package (SOP + SKILL.md + reference + examples + helpe
   "model_id": "Model to use (optional)"
 }
 ```
-`format` is one of `knowledge_doc` (default) or `agent_spec`.
+`format` currently accepts only `knowledge_doc` (the default); it is optional.
 
 ### `generate_harness_bundle`
 Generate a deployment-ready Agentic Harness ZIP bundle for a specific platform. Returns a confirmation when the bundle is queued for download.

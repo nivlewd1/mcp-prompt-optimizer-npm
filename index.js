@@ -385,7 +385,7 @@ class MCPPromptOptimizer {
             type: "object",
             properties: {
               goal: { type: "string", description: "What the agent should accomplish" },
-              format: { type: "string", enum: ["knowledge_doc", "agent_spec"], description: "Output format" },
+              format: { type: "string", enum: ["knowledge_doc"], description: "Output format" },
               model_id: { type: "string", description: "Model to use (optional)" }
             },
             required: ["goal"]
