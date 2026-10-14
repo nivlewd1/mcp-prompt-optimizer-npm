@@ -1525,8 +1525,10 @@ class MCPPromptOptimizer {
     if (args.version_number === undefined || args.version_number === null) throw new Error('version_number is required');
     try {
       const result = await this.callBackendAPI(ENDPOINTS.ROLLBACK_TEMPLATE(args.template_id, args.version_number), {});
-      const msg = result.message || `Template rolled back to version ${args.version_number}`;
-      return { content: [{ type: "text", text: `# ✅ Rollback Complete\n\n${msg}\n\n**Template ID:** \`${args.template_id}\`\n**Version:** ${args.version_number}` }] };
+      // The backend records a rollback as a new revision carrying the old content.
+      const msg = result.message || `Restored the content of version ${args.version_number}`;
+      const revision = result.version_number ? `\n**Current version:** ${result.version_number} (content of version ${args.version_number})` : '';
+      return { content: [{ type: "text", text: `# ✅ Rollback Complete\n\n${msg}\n\n**Template ID:** \`${args.template_id}\`${revision}` }] };
     } catch (error) {
       if (error.statusCode === 403) {
         return { content: [{ type: "text", text: `Upgrade required: template rollback requires Pro tier or higher. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };

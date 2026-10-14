@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`list_template_versions` lists versions.** The backend returns a bare array, which the tool read as empty.
 - **Template tools show the slug and version**, which `get_prompt_by_slug` and `compile_prompt` need.
 - The `explore_sop_approaches` messages say Enterprise, not Innovator.
+- `rollback_template` reports the new current version instead of echoing the version you restored from.
 - `run_quick_evaluation` shows the judge's reason when a prompt fails, instead of only a bare score.
 
 ### Added
