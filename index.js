@@ -1299,17 +1299,21 @@ class MCPPromptOptimizer {
       if (!sessionId) {
         return { content: [{ type: "text", text: this._formatSkillPackage(startResult) }] };
       }
-      for (let i = 0; i < 24; i++) {
+      for (let i = 0; i < 36; i++) {
         await new Promise(resolve => setTimeout(resolve, 5000));
         const status = await this.callBackendAPI(ENDPOINTS.CE.SESSION(sessionId), null, 'GET');
         const state = status.workflow_state || status.current_state;
-        if (state === 'complete') return { content: [{ type: "text", text: this._formatSkillPackage(status) }] };
+        if (state === 'complete') {
+          // generate_harness_bundle accepts this id to reuse the SOP, but it was never shown to the user.
+          const reuse = `\n\n**Session ID:** \`${sessionId}\` (pass as \`session_id\` to \`generate_harness_bundle\` to reuse this SOP)`;
+          return { content: [{ type: "text", text: this._formatSkillPackage(status) + reuse }] };
+        }
         if (state === 'failed') {
           workflowError = new Error(`Generation failed: ${status.error || 'Unknown error'}`);
           throw workflowError;
         }
       }
-      workflowError = new Error(`Timed out after 120s. Session ID: ${sessionId}`);
+      workflowError = new Error(`Timed out after 180s. Session ID: ${sessionId}`);
       throw workflowError;
     } catch (error) {
       if (error === workflowError) throw error;

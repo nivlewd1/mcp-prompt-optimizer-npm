@@ -129,6 +129,12 @@ function assertRequired(opt, suffix) {
     assert.strictEqual(formatErrorDetail('plain'), 'plain');
   });
 
+  await check('generate_skill_package shows the session id so generate_harness_bundle can reuse it', async () => {
+    const opt = recordingOptimizer((endpoint) => (endpoint.endsWith('/generate-skill-package') ? { session_id: 'sess-123' } : { workflow_state: 'complete', artifacts: { sop: 'THE SOP' } }));
+    const out = await opt.handleGenerateSkillPackage({ goal: 'g' });
+    assert.ok(/sess-123/.test(out.content[0].text) && /session_id/.test(out.content[0].text));
+  });
+
   if (failures) {
     console.error(`\nREQUEST CONTRACT TEST FAILED — ${failures} check(s) failed.`);
     process.exit(1);
