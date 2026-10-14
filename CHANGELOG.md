@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.8] - 2026-10-14
+
+### Fixed
+- **`generate_agent_sop` works.** It sent `goal`, but the backend requires `prompt`, so every call failed. The goal
+  and any `context` are now sent as `prompt`.
+- **`transform_for_framework` works.** It sent `goal`, but the backend requires `user_goal`, so every call failed.
+- **`generate_harness_bundle` returns the bundle.** The ZIP was discarded and the tool only said it was
+  "requested", although each call spends a package credit. The ZIP is now saved to `output_dir`,
+  `OPTIMIZER_OUTPUT_DIR` or a temp folder, and the tool returns its path. The call now allows 180 seconds
+  (it takes about 40) instead of failing at the 30 second default, and binary responses are no longer corrupted
+  by being read as text.
+- **`list_template_versions` lists versions.** The backend returns a bare array, which the tool read as empty.
+- **Template tools show the slug and version**, which `get_prompt_by_slug` and `compile_prompt` need.
+- The `explore_sop_approaches` messages say Enterprise, not Innovator.
+
+### Added
+- `tests/ce-request-contract-check.js` pins the request body each Context Engineering tool sends.
+
 ## [3.8.7] - 2026-10-14
 
 ### Fixed

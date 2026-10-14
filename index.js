@@ -12,6 +12,9 @@ const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
 const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
 const { CallToolRequestSchema, ListToolsRequestSchema } = require('@modelcontextprotocol/sdk/types.js');
 const https = require('https');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const CloudApiKeyManager = require('./lib/api-key-manager');
 const { formatQuickEvaluation } = require('./lib/format-evaluation');
 const packageJson = require('./package.json');
@@ -413,7 +416,7 @@ class MCPPromptOptimizer {
           name: "generate_harness_bundle",
           description: (
             "Generate a deployment-ready Agentic Harness ZIP bundle for a specific platform. "
-            + "Returns a confirmation message when the bundle is queued. "
+            + "Saves the ZIP to disk and returns its path. "
             + "Explorer+ required for non-default deploy targets."
           ),
           inputSchema: {
@@ -454,6 +457,10 @@ class MCPPromptOptimizer {
                 type: "string",
                 description: "The SOP content to base the harness on (required if no session_id)."
               },
+              output_dir: {
+                type: "string",
+                description: "Directory to save the ZIP in. Default: OPTIMIZER_OUTPUT_DIR or a temp folder."
+              },
               agent_read_only: {
                 type: "boolean",
                 description: (
@@ -481,7 +488,7 @@ class MCPPromptOptimizer {
           description: (
             "Generate 3 parallel SOP variants (process-oriented, decision-tree, role-based) for comparison before committing. " +
             "Returns exploration_html (self-contained comparison grid), variants array, and a recommended variant. " +
-            "Innovator tier required. " +
+            "Enterprise tier required. " +
             "Optionally provide blend_description to skip comparison and receive a single blended SOP instead."
           ),
           inputSchema: {
@@ -1172,6 +1179,7 @@ class MCPPromptOptimizer {
       let output = `# ✅ Template Created Successfully!\n\n`;
       output += `**Title:** ${result.title}\n`;
       output += `**ID:** \`${result.id}\`\n`;
+      if (result.slug) output += `**Slug:** \`${result.slug}\`\n`;
       output += `**Confidence Score:** ${(result.confidence_score * 100).toFixed(1)}%\n`;
       output += `**AI Context:** ${result.ai_context_detected || 'N/A'}\n`;
       output += `**Public:** ${result.is_public ? 'Yes' : 'No'}\n`;
@@ -1189,6 +1197,8 @@ class MCPPromptOptimizer {
       let output = `# 📄 Template Details\n\n`;
       output += `**Title:** ${result.title}\n`;
       output += `**ID:** \`${result.id}\`\n`;
+      if (result.slug) output += `**Slug:** \`${result.slug}\`\n`;
+      if (result.version_number) output += `**Version:** ${result.version_number}${result.state ? ` (${result.state})` : ''}\n`;
       output += `**Description:** ${result.description || 'N/A'}\n`;
       output += `**AI Context:** ${result.ai_context_detected || 'N/A'}\n`;
       output += `**Confidence Score:** ${(result.confidence_score * 100).toFixed(1)}%\n`;
@@ -1216,8 +1226,9 @@ class MCPPromptOptimizer {
       const result = await this.callBackendAPI(ENDPOINTS.TEMPLATE.UPDATE(template_id), updateData, 'PATCH'); // PATCH is better for partial updates
       let output = `# ✅ Template Updated Successfully!\n\n`;
       output += `**ID:** \`${result.id}\`\n`;
-      output += `**Title:** ${result.title}\n\n`;
-      output += `Use 'get_template' with the ID to see the full updated template.`;
+      output += `**Title:** ${result.title}\n`;
+      if (result.version_number) output += `**Version:** ${result.version_number}\n`;
+      output += `\nUse 'get_template' with the ID to see the full updated template.`;
       return { content: [{ type: "text", text: output }] };
     } catch (error) {
       throw new Error(`Failed to update template: ${error.message}`);
@@ -1237,8 +1248,8 @@ class MCPPromptOptimizer {
 
   async handleGenerateAgentSop(args) {
     if (!args.goal) throw new Error('goal is required');
-    const payload = { goal: args.goal };
-    if (args.context) payload.context = args.context;
+    // Backend GenerateSOPRequest takes `prompt` (no separate context field), so fold context into it.
+    const payload = { prompt: args.context ? `${args.goal}\n\nContext:\n${args.context}` : args.goal };
     if (args.model_id) payload.model_id = args.model_id;
     if (args.intent_frame) payload.intent_frame = args.intent_frame;
     try {
@@ -1287,7 +1298,7 @@ class MCPPromptOptimizer {
     if (!valid.includes(args.framework)) throw new Error(`framework must be one of: ${valid.join(', ')}`);
     try {
       const result = await this.callBackendAPI(ENDPOINTS.CE.TRANSFORM, {
-        sop_content: args.sop_content, goal: args.goal, framework: args.framework
+        sop_content: args.sop_content, user_goal: args.goal, framework: args.framework
       });
       const code = result.code || result.content || result.result || JSON.stringify(result, null, 2);
       return { content: [{ type: "text", text: `# ${args.framework} Implementation\n\n\`\`\`python\n${code}\n\`\`\`${this._formatWarnings(result)}\n\n---\n*Transformed by MCP Prompt Optimizer CE*` }] };
@@ -1359,11 +1370,22 @@ class MCPPromptOptimizer {
     }
 
     try {
-      await this.callBackendAPI(ENDPOINTS.CE.HARNESS_BUNDLE, payload);
+      // Bundle generation runs LLM calls server-side and routinely exceeds the 30s default.
+      const bundleTimeout = Math.max(this.requestTimeout, 180000);
+      const result = await this.callBackendAPI(ENDPOINTS.CE.HARNESS_BUNDLE, payload, 'POST', bundleTimeout);
+      if (!result._binary || !result.body || result.body.length === 0) {
+        throw new Error('Backend returned no ZIP bundle');
+      }
+      // The backend persists nothing, so this file is the only copy of what the credit paid for.
+      const outDir = args.output_dir || process.env.OPTIMIZER_OUTPUT_DIR || path.join(os.tmpdir(), 'mcp-prompt-optimizer');
+      fs.mkdirSync(outDir, { recursive: true });
+      const baseName = path.basename(result.filename || `harness-${deployTargets[0]}.zip`);
+      const outPath = path.join(outDir, `${new Date().toISOString().replace(/[:.]/g, '-')}-${baseName}`);
+      fs.writeFileSync(outPath, result.body);
       return {
         content: [{
           type: "text",
-          text: `# Harness Bundle Requested\n\nDeploy target: **${deployTargets.join(", ")}**\nGoal: ${args.goal}\n\nDownload from the CE dashboard or via the /harness-bundle API endpoint.`
+          text: `# Harness Bundle Ready\n\nDeploy target: **${deployTargets.join(", ")}**\nGoal: ${args.goal}\n\nSaved ${result.body.length} bytes to:\n\`${outPath}\`\n\nUnzip it into your project to wire up the harness.`
         }]
       };
     } catch (error) {
@@ -1434,7 +1456,7 @@ class MCPPromptOptimizer {
       };
     } catch (error) {
       if (error.statusCode === 403) {
-        return { content: [{ type: "text", text: `Error: SOP exploration requires Innovator tier. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };
+        return { content: [{ type: "text", text: `Error: SOP exploration requires Enterprise tier. Upgrade at /pricing.\n\nBackend error: ${error.message}` }] };
       }
       throw new Error(`Failed to explore SOP approaches: ${error.message}`);
     }
@@ -1474,14 +1496,15 @@ class MCPPromptOptimizer {
     if (!args.template_id) throw new Error('Template ID is required');
     try {
       const result = await this.callBackendAPI(ENDPOINTS.TEMPLATE_VERSIONS(args.template_id), null, 'GET');
-      const versions = result.versions || result.data || [];
+      // The backend returns a bare JSON array (newest first); keep the object shapes as a fallback.
+      const versions = Array.isArray(result) ? result : (result.versions || result.data || []);
       let output = `# 📋 Template Versions\n\n`;
       output += `**Template ID:** \`${args.template_id}\`\n\n`;
       if (versions.length === 0) {
         output += 'No version history found for this template.';
       } else {
         versions.forEach((v, i) => {
-          output += `**${i + 1}.** Version ${v.version_number || 'N/A'}`;
+          output += `**${i + 1}.** Version ${v.version_number ?? 'N/A'}`;
           if (v.created_at) output += ` — ${v.created_at}`;
           if (v.change_summary) output += `\n   _${v.change_summary}_`;
           output += `\n`;
@@ -1581,7 +1604,7 @@ class MCPPromptOptimizer {
     return `${this.backendUrl}${path}`;
   }
 
-  async callBackendAPI(endpoint, data, method = 'POST') {
+  async callBackendAPI(endpoint, data, method = 'POST', timeoutMs = this.requestTimeout) {
     return new Promise((resolve, reject) => {
       const url = this._buildUrl(endpoint);
       
@@ -1594,18 +1617,20 @@ class MCPPromptOptimizer {
           'Accept': 'application/json',
           'Connection': 'close'
         },
-        timeout: this.requestTimeout
+        timeout: timeoutMs
       };
 
       const client = this.backendUrl.startsWith('https://') ? https : require('http');
       const req = client.request(url, options, (res) => {
-        let responseData = '';
-        
+        const chunks = [];
+
         res.on('data', (chunk) => {
-          responseData += chunk;
+          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
         });
-        
+
         res.on('end', () => {
+          const rawBody = Buffer.concat(chunks);
+          const responseData = rawBody.toString('utf8');
           try {
             if (res.statusCode >= 200 && res.statusCode < 300) {
               const contentType = res.headers['content-type'] || '';
@@ -1618,7 +1643,13 @@ class MCPPromptOptimizer {
                 }
               } else {
                 // Binary or non-JSON response (e.g., application/zip) — return metadata
-                resolve({ _binary: true, contentType, size: responseData.length });
+                resolve({
+                  _binary: true,
+                  contentType,
+                  size: rawBody.length,
+                  body: rawBody,
+                  filename: ((res.headers['content-disposition'] || '').match(/filename="?([^";]+)"?/) || [])[1]
+                });
               }
             } else {
               let errorMessage;
