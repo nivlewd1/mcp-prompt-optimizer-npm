@@ -2,7 +2,7 @@
 
 /**
  * MCP Prompt Optimizer - Professional Cloud-Based MCP Server
- * Production-grade with Bayesian optimization, AG-UI real-time features, enhanced network resilience, 
+ * Production-grade with AG-UI real-time features, enhanced network resilience, 
  * development mode, and complete backend alignment
  * 
  * Version: 3.2.0 - add delete_template tool (15 tools total)
@@ -111,7 +111,7 @@ class MCPPromptOptimizer {
     this.requestTimeout = parseInt(process.env.OPTIMIZER_REQUEST_TIMEOUT) || 30000;
     
     // Feature flags: enabled by default, set to 'false' to disable
-    this.bayesianOptimizationEnabled = process.env.ENABLE_BAYESIAN_OPTIMIZATION !== 'false';
+    this.bayesianOptimizationEnabled = process.env.ENABLE_BAYESIAN_OPTIMIZATION === 'true';
     this.aguiFeatures = process.env.ENABLE_AGUI_FEATURES !== 'false';
     
     this.setupMCPHandlers();
@@ -122,7 +122,7 @@ class MCPPromptOptimizer {
       const baseTools = [
         {
           name: "optimize_prompt",
-          description: "🎯 Professional AI-powered prompt optimization with intelligent context detection, Bayesian optimization, template auto-save, and comprehensive optimization insights",
+          description: "🎯 Professional AI-powered prompt optimization with intelligent context detection, template auto-save, and comprehensive optimization insights",
           inputSchema: {
             type: "object",
             properties: {
@@ -148,7 +148,7 @@ class MCPPromptOptimizer {
               },
               enable_bayesian: {
                 type: "boolean",
-                description: "Enable Bayesian optimization features for parameter tuning (if available)",
+                description: "Deprecated: accepted for compatibility; has no effect on the hosted service",
                 default: true
               },
               value_hierarchy: {
@@ -205,7 +205,7 @@ class MCPPromptOptimizer {
         },
         {
           name: "get_quota_status",
-          description: "📊 Check subscription status, quota usage, and account information with detailed insights and Bayesian optimization metrics",
+          description: "📊 Check subscription status, quota usage, and account information with detailed insights",
           inputSchema: { type: "object", properties: {}, additionalProperties: false }
         },
         {
@@ -586,7 +586,7 @@ class MCPPromptOptimizer {
       if (this.bayesianOptimizationEnabled) {
         baseTools.push({
           name: "get_optimization_insights",
-          description: "🧠 Get advanced Bayesian optimization insights, performance analytics, and parameter tuning recommendations",
+          description: "🧠 Experimental: Bayesian optimization insights. The hosted service does not currently provide them, so this reports that insights are unavailable. Off by default (set ENABLE_BAYESIAN_OPTIMIZATION=true to list it)",
           inputSchema: {
             type: "object",
             properties: {

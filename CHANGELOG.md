@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.7] - 2026-10-14
+
+### Fixed
+- **The package no longer advertises Bayesian optimization.** The `optimize_prompt` and `get_quota_status` tool
+  descriptions, the README example and the package metadata claimed Bayesian optimization and parameter tuning.
+  The hosted service does not do this for requests, and the `get_optimization_insights` tool calls an analytics
+  endpoint (`/api/v1/analytics/bayesian-insights`) that does not exist on it. That tool is now off by default (it
+  reports that insights are unavailable if you turn it on), and the `enable_bayesian` parameter is marked
+  deprecated with no effect.
+
 ## [3.8.6] - 2026-10-13
 
 ### Fixed

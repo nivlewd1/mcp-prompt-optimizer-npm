@@ -1,6 +1,6 @@
 {
   "name": "mcp-prompt-optimizer",
-  "version": "3.8.6",
+  "version": "3.8.7",
   "description": "Professional cloud-based MCP server for AI-powered prompt optimization with intelligent context detection, AG-UI real-time optimization, template auto-save, optimization insights, personal model configuration via WebUI, team collaboration, enterprise-grade features, production resilience, and startup validation. Universal compatibility with Claude Desktop, Cursor, Windsurf, Cline and other MCP clients.",
   "main": "index.js",
   "bin": {
@@ -146,9 +146,9 @@
       },
       {
         "name": "ENABLE_BAYESIAN_OPTIMIZATION",
-        "description": "Enable Bayesian optimization features (true/false)",
+        "description": "Experimental: list the get_optimization_insights tool. The hosted service does not currently provide Bayesian insights (true/false)",
         "required": false,
-        "default": "true"
+        "default": "false"
       },
       {
         "name": "ENABLE_AGUI_FEATURES",
@@ -170,7 +170,7 @@
       "fallback_modes": true
     },
     "advanced": {
-      "bayesian_optimization": true,
+      "bayesian_optimization": false,
       "ag_ui_real_time": true,
       "streaming_optimization": true,
       "intelligent_routing": true,
@@ -193,7 +193,7 @@
     "api_version": "v1",
     "endpoints_aligned": true,
     "feature_parity": true,
-    "bayesian_support": true,
+    "bayesian_support": false,
     "agui_support": true,
     "last_sync": "2026-06-01T00:00:00Z"
   },

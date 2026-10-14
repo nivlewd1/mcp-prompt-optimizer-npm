@@ -175,8 +175,7 @@ AI optimization with context detection, auto-save, and insights.
 {
   "prompt": "Your prompt text",
   "goals": ["clarity", "specificity"],
-  "ai_context": "code_generation",
-  "enable_bayesian": true
+  "ai_context": "code_generation"
 }
 ```
 
@@ -238,7 +237,7 @@ Search your saved template library.
 Check subscription status and quota usage. No parameters required.
 
 ### `get_optimization_insights` *(conditional)*
-Bayesian optimization insights and parameter tuning recommendations. Requires the feature to be enabled in the backend; returns mock data otherwise.
+Experimental and off by default (set `ENABLE_BAYESIAN_OPTIMIZATION=true` to list it). It calls an analytics endpoint that the hosted service does not currently provide, so it reports that insights are unavailable; it never returns made-up data.
 ```json
 {
   "analysis_depth": "detailed",
