@@ -27,4 +27,9 @@ assert(/✅ Yes/.test(t) && /1 assertion\(s\) failed on their own/.test(t));
 // no assertion_results at all: do not crash
 t = formatQuickEvaluation({ overall_score: 0.5, passed: false });
 assert(/\*\*Score:\*\* 50\.0%/.test(t));
-console.log('format-evaluation: 7 passed');
+// healthy judged failure shows the judge's reason, a pass does not
+t = formatQuickEvaluation({ overall_score: 0.3, passed: false, assertion_results: [{ ...ok, passed: false }], failure_reasons: ['llm-rubric — FAILED: too vague'] });
+assert(/Why it failed/.test(t) && /too vague/.test(t));
+t = formatQuickEvaluation({ overall_score: 0.9, passed: true, assertion_results: [ok], failure_reasons: [] });
+assert(!/Why it failed/.test(t));
+console.log('format-evaluation: 9 passed');
