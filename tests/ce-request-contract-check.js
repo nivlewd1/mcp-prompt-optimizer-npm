@@ -11,7 +11,7 @@
  */
 
 const assert = require('assert');
-const { MCPPromptOptimizer } = require('../index.js');
+const { MCPPromptOptimizer, formatErrorDetail } = require('../index.js');
 
 // endpoint suffix -> fields the backend model marks required
 const REQUIRED = {
@@ -59,6 +59,14 @@ function assertRequired(opt, suffix) {
     assertRequired(opt, '/context-engineer/sop');
     const body = opt.calls[0].data;
     assert.ok(body.prompt.includes('Summarize PRs') && body.prompt.includes('repo is large'));
+  });
+
+  await check('generate_agent_sop carries intent_frame into the prompt (backend has no such field)', async () => {
+    const opt = recordingOptimizer(() => ({ content: 'sop' }));
+    await opt.handleGenerateAgentSop({ goal: 'g', intent_frame: { perspective: 'DevOps engineer', out_of_scope: 'billing', success_definition: 'zero failed deploys' } });
+    const body = opt.calls[0].data;
+    assert.ok(!('intent_frame' in body), 'unknown field sent to backend');
+    assert.ok(/DevOps engineer/.test(body.prompt) && /billing/.test(body.prompt) && /zero failed deploys/.test(body.prompt));
   });
 
   await check('generate_agent_sop surfaces the backend `content` field', async () => {
@@ -111,6 +119,14 @@ function assertRequired(opt, suffix) {
     const opt = recordingOptimizer(() => [{ version_number: 2, created_at: 'x', change_summary: 'edit' }, { version_number: 1, created_at: 'y' }]);
     const out = await opt.handleListTemplateVersions({ template_id: 't' });
     assert.ok(out.content[0].text.includes('Version 2') && !out.content[0].text.includes('No version history'));
+  });
+
+  await check('backend error details are readable, codes preserved', async () => {
+    assert.strictEqual(formatErrorDetail({ missing_variables: ['x', 'y'] }), 'Missing variables: x, y');
+    assert.strictEqual(formatErrorDetail([{ loc: ['path', 'template_id'], msg: 'String should match pattern' }]), 'template_id: String should match pattern');
+    assert.ok(/TIER_LIMIT_REACHED/.test(formatErrorDetail({ error: 'TIER_LIMIT_REACHED', message: 'needs Enterprise' })));
+    assert.ok(/UNKNOWN_DEPLOY_TARGET.*not_a_platform/.test(formatErrorDetail({ error: 'UNKNOWN_DEPLOY_TARGET', unknown_targets: ['not_a_platform'] })));
+    assert.strictEqual(formatErrorDetail('plain'), 'plain');
   });
 
   if (failures) {

@@ -93,6 +93,25 @@ const DEPLOY_TARGET_ENUM = [
   "codex_cli",
 ];
 
+// Turn a backend error `detail` (FastAPI validation array, or a structured object) into a readable sentence.
+// Error codes such as TIER_LIMIT_REACHED stay in the text because callers match on them.
+function formatErrorDetail(detail) {
+  if (Array.isArray(detail)) {
+    return detail.map((d) => {
+      if (!d || !d.msg) return JSON.stringify(d);
+      const field = (d.loc || []).filter((x) => x !== 'body' && x !== 'query' && x !== 'path').join('.');
+      return `${field || 'request'}: ${d.msg}`;
+    }).join('; ');
+  }
+  if (detail && typeof detail === 'object') {
+    if (Array.isArray(detail.missing_variables)) return `Missing variables: ${detail.missing_variables.join(', ')}`;
+    if (detail.message) return detail.error ? `${detail.error}: ${detail.message}` : String(detail.message);
+    if (Array.isArray(detail.unknown_targets)) return `${detail.error || 'UNKNOWN_DEPLOY_TARGET'}: unknown deploy target(s): ${detail.unknown_targets.join(', ')}`;
+    return JSON.stringify(detail);
+  }
+  return detail;
+}
+
 class MCPPromptOptimizer {
   constructor() {
     this.server = new Server(
@@ -1248,10 +1267,18 @@ class MCPPromptOptimizer {
 
   async handleGenerateAgentSop(args) {
     if (!args.goal) throw new Error('goal is required');
-    // Backend GenerateSOPRequest takes `prompt` (no separate context field), so fold context into it.
-    const payload = { prompt: args.context ? `${args.goal}\n\nContext:\n${args.context}` : args.goal };
+    // Backend GenerateSOPRequest takes only `prompt` + `model_id`, so context and the intent frame are folded into the prompt.
+    let prompt = args.context ? `${args.goal}\n\nContext:\n${args.context}` : args.goal;
+    const frame = args.intent_frame && typeof args.intent_frame === 'object' ? args.intent_frame : null;
+    if (frame) {
+      const lines = [];
+      if (frame.perspective) lines.push(`Agent perspective: ${frame.perspective}`);
+      if (frame.out_of_scope) lines.push(`Out of scope: ${frame.out_of_scope}`);
+      if (frame.success_definition) lines.push(`Success criteria: ${frame.success_definition}`);
+      if (lines.length) prompt += `\n\nScope and success criteria:\n${lines.join('\n')}`;
+    }
+    const payload = { prompt };
     if (args.model_id) payload.model_id = args.model_id;
-    if (args.intent_frame) payload.intent_frame = args.intent_frame;
     try {
       const result = await this.callBackendAPI(ENDPOINTS.CE.SOP, payload);
       const sopContent = result.sop || result.content || result.result || JSON.stringify(result, null, 2);
@@ -1658,7 +1685,7 @@ class MCPPromptOptimizer {
               try {
                 const error = JSON.parse(responseData);
                 errorMessage = (typeof error.detail === 'object' && error.detail !== null)
-                  ? JSON.stringify(error.detail)
+                  ? formatErrorDetail(error.detail)
                   : (error.detail || error.message || `HTTP ${res.statusCode}`);
               } catch {
                 errorMessage = `HTTP ${res.statusCode}: ${responseData}`;
@@ -2288,4 +2315,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { MCPPromptOptimizer };
+module.exports = { MCPPromptOptimizer, formatErrorDetail };

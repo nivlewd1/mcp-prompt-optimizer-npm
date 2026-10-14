@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`list_template_versions` lists versions.** The backend returns a bare array, which the tool read as empty.
 - **Template tools show the slug and version**, which `get_prompt_by_slug` and `compile_prompt` need.
 - The `explore_sop_approaches` messages say Enterprise, not Innovator.
+- `generate_agent_sop` now applies `intent_frame` (perspective, out of scope, success criteria): the backend has no such field, so it is folded into the prompt instead of being silently dropped.
+- Backend errors are readable: validation errors list the field and reason, a missing template variable says which one, and unknown deploy targets are named, instead of raw JSON.
 - `rollback_template` reports the new current version instead of echoing the version you restored from.
 - `run_quick_evaluation` shows the judge's reason when a prompt fails, instead of only a bare score.
 
