@@ -80,7 +80,8 @@ const ENDPOINTS = {
     SESSION:                 (id) => `/api/v1/context-engineer/sessions/${id}`,
     TRANSFORM:               '/api/v1/context-engineer/transform',
     QUOTA:                   '/api/v1/context-engineer/quota',
-    HARNESS_BUNDLE:          '/api/v1/context-engineer/harness-bundle',
+    SCORE_SOP:               '/api/v1/context-engineer/score-sop',
+    HARNESS_BUNDLE:         '/api/v1/context-engineer/harness-bundle',
     SOP_EXPLORE:             '/api/v1/context-engineer/sop-explore',
     SOP_BLEND:               '/api/v1/context-engineer/sop-blend',
   },
@@ -432,6 +433,18 @@ class MCPPromptOptimizer {
           inputSchema: { type: "object", properties: {}, additionalProperties: false }
         },
         {
+          name: "score_sop",
+          description: "Free, deterministic completeness check for an SOP or agent prompt (no LLM, no credits). Returns a 0-100 score and the missing sections.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              sop_content: { type: "string", description: "SOP or agent prompt text (max 50,000 characters)" },
+              rubric_id: { type: "string", enum: ["base", "agent_prompt", "prompt_injection_guard"], description: "Rubric to score against (default: base)" }
+            },
+            required: ["sop_content"]
+          }
+        },
+        {
           name: "generate_harness_bundle",
           description: (
             "Generate a deployment-ready Agentic Harness ZIP bundle for a specific platform. "
@@ -663,6 +676,7 @@ class MCPPromptOptimizer {
           case "generate_skill_package": return await this.handleGenerateSkillPackage(args);
           case "transform_for_framework": return await this.handleTransformForFramework(args);
           case "get_ce_quota_status": return await this.handleGetCEQuotaStatus();
+          case "score_sop": return await this.handleScoreSop(args);
           case "generate_harness_bundle": return await this.handleGenerateHarnessBundle(args);
           case "explore_sop_approaches": return await this.handleExploreSopApproaches(args);
           case "get_prompt_by_slug": return await this.handleGetPromptBySlug(args);
@@ -1332,7 +1346,7 @@ class MCPPromptOptimizer {
         sop_content: args.sop_content, user_goal: args.goal, framework: args.framework
       });
       const code = result.code || result.content || result.result || JSON.stringify(result, null, 2);
-      return { content: [{ type: "text", text: `# ${args.framework} Implementation\n\n\`\`\`python\n${code}\n\`\`\`${this._formatWarnings(result)}\n\n---\n*Transformed by MCP Prompt Optimizer CE*` }] };
+      return { content: [{ type: "text", text: `# ${args.framework} Implementation\n\n\`\`\`python\n${code}\n\`\`\`${this._formatSopScore(result.sop_score) ? `\n\n## SOP Completeness${this._formatSopScore(result.sop_score)}` : ''}${this._formatWarnings(result)}\n\n---\n*Transformed by MCP Prompt Optimizer CE*` }] };
     } catch (error) {
       throw new Error(`Failed to transform: ${error.message}`);
     }
@@ -1358,6 +1372,31 @@ class MCPPromptOptimizer {
     } catch (error) {
       throw new Error(`Failed to get CE quota: ${error.message}`);
     }
+  }
+
+  async handleScoreSop(args) {
+    if (!args.sop_content || typeof args.sop_content !== 'string') throw new Error('sop_content is required');
+    if (args.sop_content.length > 50000) throw new Error('sop_content is too long (max 50,000 characters)');
+    try {
+      const payload = { sop_content: args.sop_content };
+      if (args.rubric_id) payload.rubric_id = args.rubric_id;
+      const result = await this.callBackendAPI(ENDPOINTS.CE.SCORE_SOP, payload);
+      return { content: [{ type: "text", text: `# SOP Completeness Score\n${this._formatSopScore(result)}\n\n---\n*Deterministic check, no LLM, no credits used.*` }] };
+    } catch (error) {
+      throw new Error(`Failed to score SOP: ${error.message}`);
+    }
+  }
+
+  // Renders the backend's deterministic rubric score (score_pct, present, missing). '' when absent.
+  _formatSopScore(score) {
+    if (!score || typeof score.score_pct !== 'number') return '';
+    const lines = [`\n**Completeness:** ${score.score_pct}% (${score.score}/${score.max_score}, rubric \`${score.rubric_id}\`)`];
+    const missing = Array.isArray(score.missing) ? score.missing : [];
+    if (missing.length) {
+      lines.push('', '**Missing:**');
+      for (const m of missing) lines.push(`- ${m.label || m.id}${m.hint ? ` — ${m.hint}` : ''}`);
+    }
+    return lines.join('\n');
   }
 
   async handleGenerateHarnessBundle(args) {
@@ -1616,6 +1655,8 @@ class MCPPromptOptimizer {
     } else {
       sections.push('\n```json\n' + JSON.stringify(result, null, 2) + '\n```');
     }
+    const score = this._formatSopScore(result.sop_score || (result.result && result.result.sop_score));
+    if (score) sections.push(`\n## SOP Completeness${score}`);
     const warn = this._formatWarnings(result);
     if (warn) sections.push(warn);
     sections.push('\n---\n*Generated by MCP Prompt Optimizer CE*');

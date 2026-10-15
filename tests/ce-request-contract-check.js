@@ -19,6 +19,7 @@ const REQUIRED = {
   '/context-engineer/transform': ['sop_content', 'user_goal', 'framework'], // TransformSOPRequest
   '/context-engineer/harness-bundle': ['sop_content', 'user_goal'],      // HarnessBundleRequest
   '/context-engineer/sop-explore': ['goal'],                             // SOPExploreRequest
+  '/context-engineer/score-sop': ['sop_content'],                        // ScoreSopRequest
 };
 
 let failures = 0;
@@ -94,6 +95,22 @@ function assertRequired(opt, suffix) {
     assert.strictEqual(saved.length, 1, 'ZIP was not written');
     assert.ok(fs.readFileSync(path.join(dir, saved[0])).equals(zip), 'saved bytes differ from the response');
     assert.ok(out.content[0].text.includes(saved[0]), 'output does not tell the user where the file is');
+  });
+
+  await check('score_sop sends sop_content, renders score and missing items, rejects oversize input locally', async () => {
+    const opt = recordingOptimizer(() => ({ rubric_id: 'base', score: 3, max_score: 5, score_pct: 60, present: ['goal'], missing: [{ id: 'steps', label: 'Steps', hint: 'add numbered steps' }] }));
+    const out = await opt.handleScoreSop({ sop_content: '# Goal' });
+    assertRequired(opt, '/context-engineer/score-sop');
+    const t = out.content[0].text;
+    assert.ok(/60%/.test(t) && /Steps/.test(t) && /add numbered steps/.test(t));
+    await assert.rejects(() => opt.handleScoreSop({ sop_content: 'a'.repeat(50001) }), /too long/);
+    await assert.rejects(() => opt.handleScoreSop({}), /required/);
+  });
+
+  await check('generate_skill_package shows sop_score when the backend returns it', async () => {
+    const opt = recordingOptimizer((endpoint) => (endpoint.endsWith('/generate-skill-package') ? { session_id: 's' } : { workflow_state: 'complete', artifacts: { sop: 'X' }, sop_score: { rubric_id: 'base', score: 4, max_score: 5, score_pct: 80, missing: [] } }));
+    const out = await opt.handleGenerateSkillPackage({ goal: 'g' });
+    assert.ok(/80%/.test(out.content[0].text));
   });
 
   await check('explore_sop_approaches sends `goal`', async () => {
