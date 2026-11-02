@@ -2,7 +2,7 @@
 
 [![NPM Version](https://img.shields.io/npm/v/mcp-prompt-optimizer)](https://www.npmjs.com/package/mcp-prompt-optimizer)
 [![License](https://img.shields.io/badge/license-Commercial-blue.svg)](LICENSE)
-[![CI](https://github.com/prompt-optimizer/mcp-prompt-optimizer/actions/workflows/ci.yml/badge.svg)](https://github.com/prompt-optimizer/mcp-prompt-optimizer/actions)
+[![CI](https://github.com/nivlewd1/mcp-prompt-optimizer-npm/actions/workflows/ci.yml/badge.svg)](https://github.com/nivlewd1/mcp-prompt-optimizer-npm/actions)
 [![Snyk Health](https://snyk.io/advisor/npm-package/mcp-prompt-optimizer/badge.svg)](https://snyk.io/advisor/npm-package/mcp-prompt-optimizer)
 
 🚀 **Professional cloud-based MCP server** for AI-powered prompt optimization with intelligent context detection, template management, team collaboration, and enterprise-grade reliability. Starting at $0/month.
@@ -489,7 +489,7 @@ Windsurf, Cline, VS Code, Zed, Replit, JetBrains IDEs, and Neovim are all suppor
 - 📖 **Documentation:** [promptoptimizer.xyz/docs](https://promptoptimizer.xyz/docs)
 - 📊 **Dashboard & model config:** [promptoptimizer.xyz/dashboard](https://promptoptimizer.xyz/dashboard)
 - 🚀 **Pricing & API Keys**: [promptoptimizer.xyz/pricing](https://promptoptimizer.xyz/pricing)
-- 🐛 **Issues:** [GitHub Issues](https://github.com/prompt-optimizer/mcp-prompt-optimizer/issues)
+- 🐛 **Issues:** [GitHub Issues](https://github.com/nivlewd1/mcp-prompt-optimizer-npm/issues)
 - 📄 **License:** [Commercial License](LICENSE)
 - 🔒 **Security:** [Security Policy](SECURITY.md)
 - 🤝 **Contributing:** [Contributing Guide](CONTRIBUTING.md)

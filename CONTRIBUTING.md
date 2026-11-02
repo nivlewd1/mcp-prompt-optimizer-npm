@@ -10,7 +10,7 @@ By participating in this project, you agree to abide by our [Code of Conduct](CO
 
 ### Reporting Bugs
 
-If you find a bug, please search our [GitHub Issues](https://github.com/prompt-optimizer/mcp-prompt-optimizer/issues) to see if it has already been reported. If not, please open a new issue and include:
+If you find a bug, please search our [GitHub Issues](https://github.com/nivlewd1/mcp-prompt-optimizer-npm/issues) to see if it has already been reported. If not, please open a new issue and include:
 
 - A clear and descriptive title.
 - Steps to reproduce the issue.
@@ -39,7 +39,7 @@ We love hearing new ideas! Please open an issue with the "enhancement" label and
 The project uses Node.js (>=16). 
 
 ```bash
-git clone https://github.com/prompt-optimizer/mcp-prompt-optimizer.git
+git clone https://github.com/nivlewd1/mcp-prompt-optimizer-npm.git
 cd mcp-prompt-optimizer
 npm install
 ```

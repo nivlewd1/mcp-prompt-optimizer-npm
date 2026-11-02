@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.9] - 2026-11-02
+
+### Fixed
+- **Dead GitHub links.** The README CI badge and Issues link, the `repository` and `bugs` fields in
+  `package.json`, and the clone URL in `CONTRIBUTING.md` pointed at an organization that does not exist.
+  They now point at `nivlewd1/mcp-prompt-optimizer-npm`.
+
 ## [3.8.8] - 2026-10-14
 
 ### Fixed
