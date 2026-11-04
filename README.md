@@ -7,6 +7,8 @@
 
 🚀 **Professional cloud-based MCP server** for AI-powered prompt optimization with intelligent context detection, template management, team collaboration, and enterprise-grade reliability. Starting at $0/month.
 
+**New here?** A free API key takes no card and includes 20 optimizations a month. [Start free](https://promptoptimizer.xyz/login?utm_source=npm&utm_medium=readme&utm_campaign=npm-bridge), or [try one optimization with no account](https://promptoptimizer.xyz/demo?utm_source=npm&utm_medium=readme&utm_campaign=npm-bridge) first.
+
 
 
 ## ✨ Key Features
@@ -30,7 +32,7 @@
 - **⭐ Pro** (`sk-opt-*`): 500 optimizations/month, full model config, Context Engineer
 - **🏢 Enterprise** (`sk-team-*`): Unlimited optimizations, team keys, shared quotas
 
-Sign up and generate your key at [promptoptimizer.xyz/dashboard](https://promptoptimizer.xyz/dashboard).
+Sign up and generate your key at [promptoptimizer.xyz/dashboard](https://promptoptimizer.xyz/dashboard?utm_source=npm&utm_medium=readme&utm_campaign=npm-quickstart).
 
 **2. Install:**
 ```bash
