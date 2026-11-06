@@ -449,7 +449,7 @@ class MCPPromptOptimizer {
           description: (
             "Generate a deployment-ready Agentic Harness ZIP bundle for a specific platform. "
             + "Saves the ZIP to disk and returns its path. "
-            + "Explorer+ required for non-default deploy targets."
+            + "Pro required for every deploy target except claude_code and ollama."
           ),
           inputSchema: {
             type: "object",
@@ -472,12 +472,12 @@ class MCPPromptOptimizer {
                       type: "string",
                       enum: DEPLOY_TARGET_ENUM
                     },
-                    description: "Multiple deploy targets simultaneously (Creator+ required)."
+                    description: "Multiple deploy targets simultaneously (Pro required)."
                   }
                 ],
                 description: (
-                  "Target deployment platform(s). Single string (Explorer+) or array (Creator+). "
-                  + "amazon_q, aider, continue_dev, crewai require Creator+. "
+                  "Target deployment platform(s). Single string or array (an array of more than one target requires Pro). "
+                  + "All targets except claude_code and ollama require Pro. "
                   + "Default: claude_code."
                 )
               },
