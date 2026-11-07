@@ -1,7 +1,8 @@
 {
   "name": "mcp-prompt-optimizer",
-  "version": "3.8.10",
-  "description": "Professional cloud-based MCP server for AI-powered prompt optimization with intelligent context detection, AG-UI real-time optimization, template auto-save, optimization insights, personal model configuration via WebUI, team collaboration, enterprise-grade features, production resilience, and startup validation. Universal compatibility with Claude Desktop, Cursor, Windsurf, Cline and other MCP clients.",
+  "version": "3.8.11",
+  "description": "MCP server for prompt optimization. Detects prompt context, optimizes through the Prompt Optimizer cloud API, manages templates, and generates agent SOPs and skill packages. Needs an API key (free tier available).",
+  "mcpName": "io.github.nivlewd1/mcp-prompt-optimizer",
   "main": "index.js",
   "bin": {
     "mcp-prompt-optimizer": "index.js"
@@ -29,7 +30,8 @@
     "test:e2e": "node tests/e2e-stdio-smoke.js",
     "test:prod-canary": "node tests/prod-canary.js",
     "pretest": "npm run health-check",
-    "prepublishOnly": "npm run test:quick",
+    "test:release": "node tests/release-check.js",
+  "prepublishOnly": "npm run test:quick && npm run test:release",
     "version": "echo 'Updating version...' && npm run test:quick"
   },
   "dependencies": {

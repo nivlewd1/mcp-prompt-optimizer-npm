@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.8.11] - 2026-11-07
+
+### Added
+- `server.json` for the Official MCP Registry (repository file, read by `mcp-publisher`; not shipped in the npm package).
+- **MCP tool annotations** on all 24 tools (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`), so clients can tell
+  read-only tools from ones that spend quota or change stored data. Only GET-only tools are marked read-only.
+- **`mcpName`** (`io.github.nivlewd1/mcp-prompt-optimizer`) for the Official MCP Registry.
+- `tests/release-check.js` (`npm run test:release`, also run before publish): offline check against a local stub backend.
+
+### Changed
+- `generate_harness_bundle`: the optional `output_dir` argument may now name only a **subfolder** of the output location
+  (`OPTIMIZER_OUTPUT_DIR`, default `<tmp>/mcp-prompt-optimizer`). Absolute paths and `..` are rejected before the backend call, so no
+  credits are spent on a bad path.
+- Package description shortened (it was cut off at 255 characters on npm).
+- README documents the local files the package writes.
+- README privacy line corrected: prompts and optimized results are stored in your account's optimization history (deletable from the
+  dashboard); the old text said no prompt data was retained.
+- Repository line endings: `.gitattributes` keeps `*.js` as LF in the working tree, so a package built on Windows no longer ships a
+  CRLF shebang (`#!/usr/bin/env node\r` fails on macOS and Linux).
+
 ## [3.8.10] - 2026-11-04
 
 ### Changed
