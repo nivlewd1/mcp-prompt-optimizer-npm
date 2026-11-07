@@ -5,7 +5,8 @@
  * Production-grade with AG-UI real-time features, enhanced network resilience, 
  * development mode, and complete backend alignment
  * 
- * Version: 3.2.0 - add delete_template tool (15 tools total)
+ * Version: see package.json. 24 tools (23 by default; get_optimization_insights needs ENABLE_BAYESIAN_OPTIMIZATION=true);
+ * each carries MCP annotations (lib/tool-annotations.js).
  */
 
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
@@ -17,6 +18,8 @@ const os = require('os');
 const path = require('path');
 const CloudApiKeyManager = require('./lib/api-key-manager');
 const { formatQuickEvaluation } = require('./lib/format-evaluation');
+const { resolveOutputDir } = require('./lib/output-path');
+const { withAnnotations } = require('./lib/tool-annotations');
 const packageJson = require('./package.json');
 const OPTIMIZATION_TEMPLATES = require('./lib/optimization-templates.json');
 
@@ -448,7 +451,7 @@ class MCPPromptOptimizer {
           name: "generate_harness_bundle",
           description: (
             "Generate a deployment-ready Agentic Harness ZIP bundle for a specific platform. "
-            + "Saves the ZIP to disk and returns its path. "
+            + "Saves the ZIP to disk and returns its path. The file is written under OPTIMIZER_OUTPUT_DIR (default: a mcp-prompt-optimizer folder in the system temp directory) with a timestamped name; it never overwrites. "
             + "Pro required for every deploy target except claude_code and ollama."
           ),
           inputSchema: {
@@ -654,7 +657,7 @@ class MCPPromptOptimizer {
         });
       }
 
-      return { tools: baseTools };
+      return { tools: withAnnotations(baseTools) };
     });
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -1441,13 +1444,14 @@ class MCPPromptOptimizer {
 
     try {
       // Bundle generation runs LLM calls server-side and routinely exceeds the 30s default.
+      // Validate the save location BEFORE the backend call: bundle generation spends credits, so a bad path must fail first.
+      const outDir = resolveOutputDir(args.output_dir);
       const bundleTimeout = Math.max(this.requestTimeout, 180000);
       const result = await this.callBackendAPI(ENDPOINTS.CE.HARNESS_BUNDLE, payload, 'POST', bundleTimeout);
       if (!result._binary || !result.body || result.body.length === 0) {
         throw new Error('Backend returned no ZIP bundle');
       }
       // The backend persists nothing, so this file is the only copy of what the credit paid for.
-      const outDir = args.output_dir || process.env.OPTIMIZER_OUTPUT_DIR || path.join(os.tmpdir(), 'mcp-prompt-optimizer');
       fs.mkdirSync(outDir, { recursive: true });
       const baseName = path.basename(result.filename || `harness-${deployTargets[0]}.zip`);
       const outPath = path.join(outDir, `${new Date().toISOString().replace(/[:.]/g, '-')}-${baseName}`);
