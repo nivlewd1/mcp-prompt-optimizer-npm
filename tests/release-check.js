@@ -138,6 +138,25 @@ async function main() {
   console.log(`    throwaway HOME received: ${homeFiles.join(', ') || '(nothing)'}`);
   assert(homeFiles.every((f) => /^\.mcp-cloud-/.test(f)), 'the only files written to HOME are the documented .mcp-cloud-* cache/health files');
 
+  console.log('\n[4] server.json (Official MCP Registry) agrees with package.json');
+  const pkg = require('../package.json');
+  const sj = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'server.json'), 'utf8'));
+  assert(sj.name === pkg.mcpName, `server.json name equals package.json mcpName (${sj.name})`);
+  assert(sj.version === pkg.version, `server.json version equals package version (${sj.version})`);
+  const np = (sj.packages || []).find((p) => p.registryType === 'npm');
+  assert(np && np.identifier === pkg.name && np.version === pkg.version, 'npm package identifier and version match package.json');
+  assert(sj.description.length >= 1 && sj.description.length <= 100, `description is within the schema limit of 100 characters (${sj.description.length})`);
+  assert(sj.repository && sj.repository.url.replace(/\.git$/, '') === String(pkg.repository.url).replace(/^git\+/, '').replace(/\.git$/, ''), 'repository URL matches package.json');
+  assert(np && (np.environmentVariables || []).some((v) => v.name === 'OPTIMIZER_API_KEY' && v.isRequired && v.isSecret), 'OPTIMIZER_API_KEY is declared required and secret');
+  assert(!/no prompt data retained|discarded immediately/i.test(fs.readFileSync(path.join(__dirname, '..', 'README.md'), 'utf8')), 'README no longer claims prompt data is not retained');
+
+  console.log('\n[5] the bin file will not ship a CRLF shebang (it breaks npx on macOS/Linux; Windows tests cannot see it)');
+  const firstLine = fs.readFileSync(path.join(__dirname, '..', 'index.js'), 'latin1').split('\n')[0];
+  assert(firstLine.startsWith('#!') && !firstLine.endsWith('\r'), `index.js shebang line ends with LF only (${JSON.stringify(firstLine.slice(-12))})`);
+  const crlfJs = ['index.js', ...fs.readdirSync(path.join(__dirname, '..', 'lib')).filter((f) => f.endsWith('.js')).map((f) => 'lib/' + f)]
+    .filter((f) => fs.readFileSync(path.join(__dirname, '..', f), 'latin1').includes('\r\n'));
+  assert(crlfJs.length === 0, `shipped .js files are LF${crlfJs.length ? ' (CRLF in: ' + crlfJs.join(', ') + ')' : ''}`);
+
   stub.server.close();
   try { fs.rmSync(home, { recursive: true, force: true }); fs.rmSync(outBase, { recursive: true, force: true }); } catch (_) {}
   console.log(`\n${passed} passed, ${failed} failed`);

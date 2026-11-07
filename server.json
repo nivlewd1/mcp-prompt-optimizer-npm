@@ -1,0 +1,31 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.nivlewd1/mcp-prompt-optimizer",
+  "title": "Prompt Optimizer",
+  "description": "Optimize prompts and generate agent SOPs and skill packages with the Prompt Optimizer cloud API.",
+  "repository": {
+    "url": "https://github.com/nivlewd1/mcp-prompt-optimizer-npm",
+    "source": "github"
+  },
+  "websiteUrl": "https://promptoptimizer.xyz",
+  "version": "3.8.11",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "mcp-prompt-optimizer",
+      "version": "3.8.11",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "OPTIMIZER_API_KEY",
+          "description": "Your Prompt Optimizer API key (starts with sk-opt-). A free key takes no card: https://promptoptimizer.xyz/dashboard",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}

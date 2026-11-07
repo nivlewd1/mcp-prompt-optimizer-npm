@@ -397,12 +397,13 @@ mcp-prompt-optimizer version            # Show version information
 - Encrypted data transmission
 - API key validation with secure backend authentication
 - Quota enforcement with real-time usage tracking
-- No prompt data retained — processed and discarded immediately
+- Prompts you optimize and the results are sent to the Prompt Optimizer API over HTTPS and stored in your account's optimization history. You can delete that history and your saved templates in the dashboard, or request account deletion. See the [privacy policy](https://promptoptimizer.xyz/privacy)
+- If the backend is unreachable, the package falls back to a limited optimization that runs on your machine
 - GDPR compliant
 
 ### Files this package writes on your machine
 
-- `~/.mcp-cloud-api-cache.json` and `~/.mcp-cloud-health.json`: a short-lived cache of your key's validation result and network-health counters. `npm run clear-cache` removes them.
+- `~/.mcp-cloud-api-cache.json` and `~/.mcp-cloud-health.json`: a cache of your key's validation result and network-health counters. `mcp-prompt-optimizer clear-cache` removes them.
 - `generate_harness_bundle` saves the ZIP it generates under `OPTIMIZER_OUTPUT_DIR` (default: a `mcp-prompt-optimizer` folder in the system temp directory), with a timestamped name; it never overwrites. The tool's optional `output_dir` argument may only name a subfolder of that location. To save elsewhere, set `OPTIMIZER_OUTPUT_DIR` in your own environment.
 - `npx mcp-prompt-optimizer connect` edits your MCP client's config file (a `.bak` backup is written first).
 

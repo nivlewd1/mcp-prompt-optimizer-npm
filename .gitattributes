@@ -1,0 +1,3 @@
+# Keep JavaScript as LF in the working tree on every OS. A Windows checkout with core.autocrlf=true otherwise
+# gives npm a CRLF shebang in the bin file (index.js), which fails on macOS/Linux.
+*.js text eol=lf
